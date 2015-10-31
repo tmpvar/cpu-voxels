@@ -1,4 +1,5 @@
 #include <GLFW/glfw3.h>
+#include <vec3.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 static void error_callback(int error, const char* description)
