@@ -49,6 +49,48 @@
 #endif // GL_EXT_separate_specular_color
 
 
+typedef float mat4[16];
+
+static inline void mat4_set(mat4 m,
+                            float a11, float a21, float a31, float a41,
+                            float a12, float a22, float a32, float a42,
+                            float a13, float a23, float a33, float a43,
+                            float a14, float a24, float a34, float a44
+                            ) {
+    m[0]  = a11;
+    m[1]  = a21;
+    m[2]  = a31;
+    m[3]  = a41;
+    m[4]  = a12;
+    m[5]  = a22;
+    m[6]  = a32;
+    m[7]  = a42;
+    m[8]  = a13;
+    m[9]  = a23;
+    m[10] = a33;
+    m[11] = a43;
+    m[12] = a14;
+    m[13] = a24;
+    m[14] = a34;
+    m[15] = a44;
+}
+
+static inline void mat4_perspective(mat4 m, float fovy, float aspect, float near, float far) {
+    float f = 1.0 / tanf(fovy / 2);
+    float nf = 1 / (near - far);
+    float a = f / aspect;
+    
+    float b = (far + near) * nf;
+    float c = (2.0 * far * near) * nf;
+    
+    mat4_set(m,
+             a, 0, 0,  0,
+             0, f, 0,  0,
+             0, 0, b, -1,
+             0, 0, c,  0
+             );
+}
+
 //========================================================================
 // Type definitions
 //========================================================================
@@ -785,13 +827,13 @@ static void draw_scene(GLFWwindow* window, double t)
     double xpos, ypos, zpos, angle_x, angle_y, angle_z;
     static double t_old = 0.0;
     float dt;
-    mat4x4 projection;
+    mat4 projection;
 
     // Calculate frame-to-frame delta time
     dt = (float) (t - t_old);
     t_old = t;
 
-    mat4x4_perspective(projection,
+    mat4_perspective(projection,
                        65.f * (float) M_PI / 180.f,
                        aspect_ratio,
                        1.0, 60.0);

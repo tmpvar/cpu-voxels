@@ -3,3 +3,7 @@ CMakeFiles
 cmake_install.cmake
 out
 Makefile
+cpuvoxels.*
+deps/glfw/GLFW.xcodeproj
+deps/glfw/CMakeScripts
+CMakeScripts

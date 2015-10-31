@@ -13,6 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 include_directories(deps/linmath)
 
 # configure glfw
+set(GLFW_BUILD_EXAMPLES OFF)
 add_subdirectory(deps/glfw)
 include_directories(deps/glfw/include)
 
