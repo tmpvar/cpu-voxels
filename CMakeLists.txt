@@ -9,9 +9,8 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
-# configure glm
-add_subdirectory(deps/glm)
-include_directories(deps/glm/glm)
+# configure linmath
+include_directories(deps/linmath)
 
 # configure glfw
 add_subdirectory(deps/glfw)
