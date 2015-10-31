@@ -24,7 +24,7 @@ enum CLASSIFICATION
 { MMM, MMP, MPM, MPP, PMM, PMP, PPM, PPP, POO, MOO, OPO, OMO, OOP, OOM,
   OMM,OMP,OPM,OPP,MOM,MOP,POM,POP,MMO,MPO,PMO,PPO};
 
-struct ray
+typedef struct ray_t
 {
   //common variables
   float x, y, z;    // ray origin
@@ -35,9 +35,9 @@ struct ray
   int classification;
   float ibyj, jbyi, kbyj, jbyk, ibyk, kbyi; //slope
   float c_xy, c_xz, c_yx, c_yz, c_zx, c_zy;
-};
+} ray3;
 
-void make_ray(vec3 ro, vec3 rd, struct ray *r)
+void ray_update(ray3 *r, vec3 ro, vec3 rd)
 {
   //common variables
   r->x = ro[0];

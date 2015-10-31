@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "aabb.h"
+#include "ray.h"
 #include "ray-aabb.h"
 
 static void error_callback(int error, const char* description)
@@ -160,7 +161,7 @@ int main(void)
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetCursorPosCallback(window, mouse_move_callback);
 
-  vec3 eye = { 0.0, 0.0, 0 };
+  vec3 eye = { 0.0, 0.0, -10 };
   vec3 center = { 0.0, 0.0, 0.0 };
   vec3 up = { 0.0, 1.0, 0.0 };
 
@@ -210,8 +211,6 @@ int main(void)
     1000.0
   );
 
-  return 0;
-
   while (!glfwWindowShouldClose(window)) {
     glfwGetFramebufferSize(window, &width, &height);
 
@@ -224,16 +223,47 @@ int main(void)
 
     // compute 3 points so that we can interpolate instead of unprojecting
     // on every point
-    vec3 rda, rdb, planeYPosition, dcol, drow, p;
+    vec3 rda, rdb, planeYPosition, dcol, drow, v3tmp;
+    vec3 planeXPosition = {0, 0, 0};
     vec3 t0 = {0, 0, 0}, tx = {1, 0, 0}, ty = {0, 1, 0};
     vec4 viewport = { 0, 0, width, height };
+
+    ray3 ray;
+    float t = 0;
+
     orbit_camera_unproject(rda, t0, viewport, m4inverted);
     orbit_camera_unproject(rda, tx, viewport, m4inverted);
     orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
 
     vec3_sub(dcol, planeYPosition, rda);
     vec3_sub(dcol, rdb, rda);
+    unsigned long hits = 0;
+    for (float y=0; y<height; y++) {
 
+      for (float x=0; x<width; x++) {
+        vec3_add(planeXPosition, planeXPosition, dcol);
+
+        vec3_sub(rd, planeXPosition, ro);
+        vec3_norm(rd, rd);
+
+        ray_update(&ray, ro, rd);
+        if (ray_aabb(&ray, bounds, &t)) {
+          hits++;
+        }
+      }
+    }
+
+    printf("hits: %u; total: %u\n", hits, width*height);
+
+    return 0;
+
+    // float x, y, sw = width * stride;
+    // for (int i=0; i<total; i+=stride) {
+
+    //   data[i+0] = 0;
+    //   data[i+1] = 255;
+    //   data[i+2] = 0;
+    // }
 
 
 

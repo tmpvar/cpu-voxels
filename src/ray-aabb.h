@@ -16,7 +16,7 @@
 #include "aabb.h"
 #include <linmath.h>
 
-uint8_t ray_aabb(struct ray *r, aabb b, float *t){
+uint8_t ray_aabb(ray3 *r, aabb b, float *t){
 
   switch (r->classification)
   {
