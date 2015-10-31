@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "aabb.h"
+
 static void error_callback(int error, const char* description)
 {
   fputs(description, stderr);
@@ -53,6 +55,27 @@ void orbit_camera_rotate(float sx, float sy, float ex, float ey) {
 
   quat_mul(orbit_camera.rotation, orbit_camera.rotation, s);
   vec4_norm(orbit_camera.rotation, orbit_camera.rotation);
+}
+
+void orbit_camera_unproject(vec3 r, vec3 vec, vec4 viewport, mat4 inv) {
+  float viewX = viewport[0];
+  float viewY = viewport[1];
+  float viewWidth = viewport[2];
+  float viewHeight = viewport[3];
+
+  float x = vec[0];
+  float y = vec[1];
+  float z = vec[2];
+
+  x = x - viewX;
+  y = viewHeight - y - 1;
+  y = y - viewY;
+
+  r[0] = (2 * x) / viewWidth - 1;
+  r[1] = (2 * y) / viewHeight - 1;
+  r[2] = 2 * z - 1;
+
+  vec3_transform(r, r, inv);
 }
 
 void orbit_camera_view(mat4 view) {
@@ -159,6 +182,14 @@ int main(void)
     data[i+2] = 0;
   }
 
+  aabb bounds = {
+    {-1, -1, -1},
+    { 1,  1,  1}
+  };
+
+  vec3 ro, rd;
+  mat4 m4inverted, view;
+
   GLuint texture[1];
   glBindTexture(GL_TEXTURE_2D, texture[0]);
   glfwGetFramebufferSize(window, &width, &height);
@@ -178,9 +209,33 @@ int main(void)
     1000.0
   );
 
-  while (!glfwWindowShouldClose(window)) {
+  return 0;
 
+  while (!glfwWindowShouldClose(window)) {
     glfwGetFramebufferSize(window, &width, &height);
+
+
+    orbit_camera_view(view);
+    mat4_get_eye(ro, view);
+
+    mat4_mul(m4inverted, projection, view);
+    mat4_invert(m4inverted, m4inverted);
+
+    // compute 3 points so that we can interpolate instead of unprojecting
+    // on every point
+    vec3 rda, rdb, planeYPosition, dcol, drow, p;
+    vec3 t0 = {0, 0, 0}, tx = {1, 0, 0}, ty = {0, 1, 0};
+    vec4 viewport = { 0, 0, width, height };
+    orbit_camera_unproject(rda, t0, viewport, m4inverted);
+    orbit_camera_unproject(rda, tx, viewport, m4inverted);
+    orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
+
+    vec3_sub(dcol, planeYPosition, rda);
+    vec3_sub(dcol, rdb, rda);
+
+
+
+
     float aspect = width / (float) height;
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
