@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "aabb.h"
+#include "ray-aabb.h"
 
 static void error_callback(int error, const char* description)
 {
