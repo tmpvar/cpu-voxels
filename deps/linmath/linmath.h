@@ -390,7 +390,9 @@ static inline void mat4_look_at(mat4 m, vec3 eye, vec3 center, vec3 up) {
     x0, y0, z0, 0,
     x1, y1, z1, 0,
     x2, y2, z2, 0,
-    -(x0 * eyex + x1 * eyey + x2 * eyez), -(y0 * eyex + y1 * eyey + y2 * eyez), -(z0 * eyex + z1 * eyey + z2 * eyez), 1
+    -(x0 * eyex + x1 * eyey + x2 * eyez),
+    -(y0 * eyex + y1 * eyey + y2 * eyez),
+    -(z0 * eyex + z1 * eyey + z2 * eyez), 1
   );
 }
 
@@ -412,15 +414,15 @@ static inline void quat_sub(quat r, quat a, quat b)
   for(i=0; i<4; ++i)
   r[i] = a[i] - b[i];
 }
-static inline void quat_mul(quat r, quat p, quat q)
+static inline void quat_mul(quat r, quat a, quat b)
 {
-  vec3 w;
-  vec3_mul_cross(r, p, q);
-  vec3_scale(w, p, q[3]);
-  vec3_add(r, r, w);
-  vec3_scale(w, q, p[3]);
-  vec3_add(r, r, w);
-  r[3] = p[3]*q[3] - vec3_mul_inner(p, q);
+  float ax = a[0], ay = a[1], az = a[2], aw = a[3],
+      bx = b[0], by = b[1], bz = b[2], bw = b[3];
+
+  r[0] = ax * bw + aw * bx + ay * bz - az * by;
+  r[1] = ay * bw + aw * by + az * bx - ax * bz;
+  r[2] = az * bw + aw * bz + ax * by - ay * bx;
+  r[3] = aw * bw - ax * bx - ay * by - az * bz;
 }
 static inline void quat_scale(quat r, quat v, float s)
 {
@@ -428,20 +430,19 @@ static inline void quat_scale(quat r, quat v, float s)
   for(i=0; i<4; ++i)
   r[i] = v[i] * s;
 }
-static inline float quat_inner_product(quat a, quat b)
-{
+static inline float quat_inner_product(quat a, quat b) {
   float p = 0.f;
   int i;
   for(i=0; i<4; ++i)
   p += b[i]*a[i];
   return p;
 }
-static inline void quat_conj(quat r, quat q)
-{
-  int i;
-  for(i=0; i<3; ++i)
-  r[i] = -q[i];
-  r[3] = q[3];
+
+static inline void quat_conj(quat r, quat q) {
+  r[0] = -q[0];
+  r[1] = -q[1];
+  r[2] = -q[2];
+  r[3] =  q[3];
 }
 static inline void quat_rotate(quat r, float angle, vec3 axis) {
   vec3 v;
@@ -501,7 +502,7 @@ static inline void quat_from_mat4(quat q, mat4 m4) {
 
   if ( fTrace > 0.0 ) {
     // |w| > 1/2, may as well choose w > 1/2
-    fRoot = sqrt(fTrace + 1.0);  // 2w
+    fRoot = sqrtf(fTrace + 1.0);  // 2w
     q[3] = 0.5 * fRoot;
     fRoot = 0.5/fRoot;  // 1/(4w)
     q[0] = (m[5]-m[7])*fRoot;
@@ -517,7 +518,7 @@ static inline void quat_from_mat4(quat q, mat4 m4) {
     int j = (i+1)%3;
     int k = (i+2)%3;
 
-    fRoot = sqrt(m[i*3+i]-m[j*3+j]-m[k*3+k] + 1.0);
+    fRoot = sqrtf(m[i*3+i]-m[j*3+j]-m[k*3+k] + 1.0);
     q[i] = 0.5 * fRoot;
     fRoot = 0.5 / fRoot;
     q[3] = (m[j*3+k] - m[k*3+j]) * fRoot;

@@ -8,17 +8,6 @@
 #include "ray.h"
 #include "ray-aabb.h"
 
-static void error_callback(int error, const char* description)
-{
-  fputs(description, stderr);
-}
-
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, GL_TRUE);
-}
-
 struct {
   uint8_t down;
   double x, y;
@@ -61,7 +50,7 @@ void orbit_camera_rotate(float sx, float sy, float ex, float ey) {
   }
 
   quat_mul(orbit_camera.rotation, orbit_camera.rotation, s);
-  vec4_norm(orbit_camera.rotation, orbit_camera.rotation);
+  quat_norm(orbit_camera.rotation, orbit_camera.rotation);
 }
 
 void orbit_camera_unproject(vec3 r, vec3 vec, vec4 viewport, mat4 inv) {
@@ -86,19 +75,44 @@ void orbit_camera_unproject(vec3 r, vec3 vec, vec4 viewport, mat4 inv) {
 }
 
 void orbit_camera_view(mat4 view) {
-
-  // mat4_from_quat(view, orbit_camera.rotation);
-  // Here's hoping that we conjegate in the above!
   quat q;
   vec3 s = { 0.0, 0.0, -orbit_camera.distance };
   quat_conj(q, orbit_camera.rotation);
   mat4_from_rotation_translation(view, q, s);
-  // mat4.fromRotationTranslation(view,
-  //   quat.conjugate(scratch0, this.rotation),
-  //   scratch1)
   vec3_negate(orbit_camera.v3scratch, orbit_camera.center);
   mat4_translate(view, orbit_camera.v3scratch);
 }
+
+static void error_callback(int error, const char* description) {
+  fputs(description, stderr);
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    switch (key) {
+      case GLFW_KEY_LEFT:
+        orbit_camera_rotate(0, 0, -.1, 0);
+      break;
+
+      case GLFW_KEY_RIGHT:
+        orbit_camera_rotate(0, 0, .1, 0);
+      break;
+
+      case GLFW_KEY_UP:
+        orbit_camera_rotate(0, 0, 0, -.1);
+      break;
+
+      case GLFW_KEY_DOWN:
+        orbit_camera_rotate(0, 0, 0, .1);
+      break;
+
+      case  GLFW_KEY_ESCAPE:
+        glfwSetWindowShouldClose(window, GL_TRUE);
+      break;
+    }
+  }
+}
+
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
@@ -135,7 +149,7 @@ int main(void)
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(1024, 768, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -146,6 +160,7 @@ int main(void)
   glfwSetKeyCallback(window, key_callback);
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetCursorPosCallback(window, mouse_move_callback);
+  glfwSetKeyCallback(window, key_callback);
 
   vec3 eye = { 0.0, 0.0, -10 };
   vec3 center = { 0.0, 0.0, 0.0 };
@@ -182,8 +197,16 @@ int main(void)
     0.1,
     1000.0
   );
-
+  double start = glfwGetTime();
+  int fps = 0;
   while (!glfwWindowShouldClose(window)) {
+    double now = glfwGetTime();
+    if (now - start > 1) {
+      printf("fps: %i\n", fps);
+      start = now;
+      fps = 0;
+    }
+    fps++;
     glfwGetFramebufferSize(window, &width, &height);
 
     orbit_camera_view(view);
