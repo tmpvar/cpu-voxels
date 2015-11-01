@@ -45,13 +45,18 @@ void orbit_camera_init(vec3 eye, vec3 center, vec3 up) {
 }
 
 void orbit_camera_rotate(float sx, float sy, float ex, float ey) {
-  quat s = { sx, sy, 0.0f };
-  quat e = { ex, ey, 0.0f };
+  vec3 vs = { sx, sy, 0.0f };
+  vec3 ve = { ex, ey, 0.0f };
+  quat s, e;
+
+  quat_from_vec3(s, vs);
+  quat_from_vec3(e, ve);
 
   quat_invert(e, e);
   quat_mul(s, s, e);
 
   if(vec4_len(s) < 1e-6) {
+    printf("MISS %f\n", vec4_len(s));
     return;
   }
 
@@ -112,36 +117,17 @@ void mouse_move_callback(GLFWwindow* window, double x, double y) {
       x / w - 0.5,
       y / h - 0.5
     );
-printf("here %f,%f -> %f,%f\n", mouse.x, mouse.y, x, y);
-    mouse.x = x;
-    mouse.y = y;
 
-
-    mat4 view;
-    mat4_identity(view);
-
-    // printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
-    //   view[0][0], view[1][0], view[2][0], view[3][0],
-    //   view[0][1], view[1][1], view[2][1], view[3][1],
-    //   view[0][2], view[1][2], view[2][2], view[3][2],
-    //   view[0][3], view[1][3], view[2][3], view[3][3]
-    // );
-
-
-
-    orbit_camera_view(view);
-
-    int a = 1;
-    // printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
-    //   view[0][0], view[1][0], view[2][0], view[3][0],
-    //   view[0][1], view[1][1], view[2][1], view[3][1],
-    //   view[0][2], view[1][2], view[2][2], view[3][2],
-    //   view[0][3], view[1][3], view[2][3], view[3][3]
-    // );
-
+    printf("here (%f, %f) -> (%f, %f)\n", mouse.x / w - 0.5,  mouse.y / h - 0.5, x/w-.5, y/h-.5);
   }
+
+  mouse.x = x;
+  mouse.y = y;
 }
 
+void vec3_print(vec3 v) {
+  printf("(%f, %f, %f)\n", v[0], v[1], v[2]);
+}
 
 int main(void)
 {
@@ -149,7 +135,7 @@ int main(void)
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(1024, 768, "Simple example", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -177,13 +163,6 @@ int main(void)
   int total = dw*dh*stride;
   uint8_t *data = malloc(total);
 
-  // memset(data, 0, total);
-  for (int i=0; i<total; i+=stride) {
-    data[i+0] = 0;
-    data[i+1] = 255;
-    data[i+2] = 0;
-  }
-
   aabb bounds = {
     {-1, -1, -1},
     { 1,  1,  1}
@@ -193,13 +172,6 @@ int main(void)
   mat4 m4inverted, view;
 
   GLuint texture[1];
-  glBindTexture(GL_TEXTURE_2D, texture[0]);
-  glfwGetFramebufferSize(window, &width, &height);
-  glTexImage2D(GL_TEXTURE_2D, 0, 3, dw, dh, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-  glBindTexture(GL_TEXTURE_2D, texture[0]);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
   mat4 projection;
   mat4_identity(projection);
@@ -214,7 +186,6 @@ int main(void)
   while (!glfwWindowShouldClose(window)) {
     glfwGetFramebufferSize(window, &width, &height);
 
-
     orbit_camera_view(view);
     mat4_get_eye(ro, view);
 
@@ -223,7 +194,7 @@ int main(void)
 
     // compute 3 points so that we can interpolate instead of unprojecting
     // on every point
-    vec3 rda, rdb, planeYPosition, dcol, drow, v3tmp;
+    vec3 rda, rdb, planeYPosition, dcol, drow;
     vec3 planeXPosition = {0, 0, 0};
     vec3 t0 = {0, 0, 0}, tx = {1, 0, 0}, ty = {0, 1, 0};
     vec4 viewport = { 0, 0, width, height };
@@ -232,40 +203,48 @@ int main(void)
     float t = 0;
 
     orbit_camera_unproject(rda, t0, viewport, m4inverted);
-    orbit_camera_unproject(rda, tx, viewport, m4inverted);
+    orbit_camera_unproject(rdb, tx, viewport, m4inverted);
     orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
 
     vec3_sub(dcol, planeYPosition, rda);
-    vec3_sub(dcol, rdb, rda);
-    unsigned long hits = 0;
+    vec3_sub(drow, rdb, rda);
+
+
+    unsigned hits = 0;
     for (float y=0; y<height; y++) {
+      vec3_add(planeYPosition, planeYPosition, dcol);
+      vec3_copy(planeXPosition, planeYPosition);
 
       for (float x=0; x<width; x++) {
-        vec3_add(planeXPosition, planeXPosition, dcol);
+        vec3_add(planeXPosition, planeXPosition, drow);
 
         vec3_sub(rd, planeXPosition, ro);
         vec3_norm(rd, rd);
 
+        unsigned long where = y * width * stride + x * stride;
         ray_update(&ray, ro, rd);
         if (ray_aabb(&ray, bounds, &t)) {
           hits++;
+
+          data[where+0] = 255;
+          data[where+1] = 255;
+          data[where+2] = 255;
+        } else {
+          data[where+0] = 0;
+          data[where+1] = 0;
+          data[where+2] = 0;
         }
       }
     }
 
-    printf("hits: %u; total: %u\n", hits, width*height);
+    // printf("hits: %u; total: %u\n", hits, width*height);
 
-    return 0;
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
-    // float x, y, sw = width * stride;
-    // for (int i=0; i<total; i+=stride) {
-
-    //   data[i+0] = 0;
-    //   data[i+1] = 255;
-    //   data[i+2] = 0;
-    // }
-
-
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
     float aspect = width / (float) height;
     glViewport(0, 0, width, height);
@@ -291,6 +270,8 @@ int main(void)
     glEnd();
 
     glfwSwapBuffers(window);
+
+    glDeleteTextures(1, &texture[0]);
     glfwPollEvents();
   }
   glfwDestroyWindow(window);

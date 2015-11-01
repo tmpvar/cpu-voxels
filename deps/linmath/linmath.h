@@ -557,6 +557,25 @@ static inline void mat4_from_quat(mat4 m, quat q)
   );
 }
 
+static inline void quat_from_vec3(quat q, const vec3 vec) {
+  float x = vec[0];
+  float y = vec[1];
+  float z = vec[2];
+  float s = x*x + y*y;
+  if(s > 1.0) {
+    s = 1.0;
+  }
+
+  if (z == 0.0) {
+    z = sqrtf(1.0 - s);
+  }
+
+  q[0] = -x;
+  q[1] =  y;
+  q[2] =  z;
+  q[3] =  0.0;
+}
+
 static inline void mat4_translate(mat4 m, vec3 vec) {
   float x = vec[0], y = vec[1], z = vec[2];
   m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
