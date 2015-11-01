@@ -14,7 +14,7 @@
 
 #include "ray.h"
 #include "aabb.h"
-#include <linmath.h>
+#include <3d.h>
 
 uint8_t ray_aabb(ray3 *r, aabb b, float *t){
 

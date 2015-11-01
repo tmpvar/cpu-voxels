@@ -444,6 +444,7 @@ static inline void quat_conj(quat r, quat q) {
   r[2] = -q[2];
   r[3] =  q[3];
 }
+
 static inline void quat_rotate(quat r, float angle, vec3 axis) {
   vec3 v;
   vec3_scale(v, axis, sinf(angle / 2));

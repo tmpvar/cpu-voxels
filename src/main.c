@@ -1,5 +1,5 @@
 #include <GLFW/glfw3.h>
-#include <linmath.h>
+#include <3d.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -242,7 +242,7 @@ int main(void)
         vec3_add(planeXPosition, planeXPosition, drow);
 
         vec3_sub(rd, planeXPosition, ro);
-        vec3_norm(rd, rd);
+//        vec3_norm(rd, rd);
 
         unsigned long where = y * width * stride + x * stride;
         ray_update(&ray, ro, rd);
