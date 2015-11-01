@@ -16,6 +16,34 @@
 #include "aabb.h"
 #include <3d.h>
 
+#define min(x, y) ((x) < (y) ? (x) : (y))
+#define max(x, y) ((x) > (y) ? (x) : (y))
+
+uint8_t ray_isect(vec3 ro, vec3 rd, aabb b) {
+    vec3 inv = {
+      1.0 / rd[0],
+      1.0 / rd[1],
+      1.0 / rd[2]
+    };
+
+    float t1 = (b[0][0] - ro[0]) * inv[0];
+    float t2 = (b[1][0] - ro[0]) * inv[0];
+
+    float tmin = min(t1, t2);
+    float tmax = max(t1, t2);
+
+    for (int i = 1; i < 3; ++i) {
+        t1 = (b[0][i] - ro[i]) * inv[i];
+        t2 = (b[1][i] - ro[i]) * inv[i];
+
+        tmin = max(tmin, min(t1, t2));
+        tmax = min(tmax, max(t1, t2));
+    }
+
+    return tmax > max(tmin, 0.0);
+}
+
+
 uint8_t ray_aabb(ray3 *r, aabb b, float *t){
 
   switch (r->classification)

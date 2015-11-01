@@ -245,8 +245,12 @@ int main(void)
 //        vec3_norm(rd, rd);
 
         unsigned long where = y * width * stride + x * stride;
-        ray_update(&ray, ro, rd);
-        if (ray_aabb(&ray, bounds, &t)) {
+        uint8_t isect;
+
+        // ray_update(&ray, ro, rd);
+        // isect = ray_aabb(&ray, bounds, &t);
+        isect = ray_isect(ro, rd, bounds);
+        if (isect) {
           hits++;
 
           data[where+0] = 255;
