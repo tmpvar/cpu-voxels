@@ -75,9 +75,9 @@ static void ray_classify(ray3 *r, vec3 rd) {
   //    |||_ j negative (false)
   //    ||_ i non-zero (true)
   //    |_ i negative (true)
-  r->classification = (i<0?1:0) << 5 | (i&1) << 4 |
-                      (j<0?1:0) << 3 | (j&1) << 2 |
-                      (k<0?1:0) << 1 | (k&1);
+  r->classification = (i<0) << 5 | (i&1) << 4 |
+                      (j<0) << 3 | (j&1) << 2 |
+                      (k<0) << 1 | (k&1);
 }
 
 void ray_update(ray3 *r, vec3 ro, vec3 rd)
@@ -90,23 +90,9 @@ void ray_update(ray3 *r, vec3 ro, vec3 rd)
   r->j = rd[1];
   r->k = rd[2];
 
-  r->ii = 1.0f/r->i;
-  r->ij = 1.0f/r->j;
-  r->ik = 1.0f/r->k;
-
-  // //ray slope
-  // r->ibyj = r->i * r->ij;
-  // r->jbyi = r->j * r->ii;
-  // r->jbyk = r->j * r->ik;
-  // r->kbyj = r->k * r->ij;
-  // r->ibyk = r->i * r->ik;
-  // r->kbyi = r->k * r->ii;
-  // r->c_xy = r->y - r->jbyi * r->x;
-  // r->c_xz = r->z - r->kbyi * r->x;
-  // r->c_yx = r->x - r->ibyj * r->y;
-  // r->c_yz = r->z - r->kbyj * r->y;
-  // r->c_zx = r->x - r->ibyk * r->z;
-  // r->c_zy = r->y - r->jbyk * r->z;
+  r->ii = r->i == 0 ? 0.0 : 1.0f/r->i;
+  r->ij = r->j == 0 ? 0.0 : 1.0f/r->j;
+  r->ik = r->k == 0 ? 0.0 : 1.0f/r->k;
 
   ray_classify(r, rd);
 }
