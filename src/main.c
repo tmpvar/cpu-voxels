@@ -33,7 +33,7 @@ void orbit_camera_init(vec3 eye, vec3 center, vec3 up) {
   orbit_camera_lookat(eye, center, up);
 }
 
-void orbit_camera_rotate(float sx, float sy, float ex, float ey) {
+void orbit_camera_rotate(double sx, double sy, double ex, double ey) {
   vec3 vs = { sx, sy, 0.0f };
   vec3 ve = { ex, ey, 0.0f };
   quat s, e;
@@ -54,14 +54,14 @@ void orbit_camera_rotate(float sx, float sy, float ex, float ey) {
 }
 
 void orbit_camera_unproject(vec3 r, vec3 vec, vec4 viewport, mat4 inv) {
-  float viewX = viewport[0];
-  float viewY = viewport[1];
-  float viewWidth = viewport[2];
-  float viewHeight = viewport[3];
+  double viewX = viewport[0];
+  double viewY = viewport[1];
+  double viewWidth = viewport[2];
+  double viewHeight = viewport[3];
 
-  float x = vec[0];
-  float y = vec[1];
-  float z = vec[2];
+  double x = vec[0];
+  double y = vec[1];
+  double z = vec[2];
 
   x = x - viewX;
   y = viewHeight - y - 1;
@@ -149,7 +149,7 @@ int main(void)
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(800, 600, "Simple example", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -197,14 +197,18 @@ int main(void)
     0.1,
     1000.0
   );
+
+  glGenTextures(1, &texture);
   double start = glfwGetTime();
   int fps = 0;
+  unsigned long pixels = 0;
   while (!glfwWindowShouldClose(window)) {
     double now = glfwGetTime();
     if (now - start > 1) {
-      printf("fps: %i\n", fps);
+      printf("fps: %i (%f Mrays/s)\n", fps, pixels/1000000.0f);
       start = now;
       fps = 0;
+      pixels = 0;
     }
     fps++;
     glfwGetFramebufferSize(window, &width, &height);
@@ -223,7 +227,7 @@ int main(void)
     vec4 viewport = { 0, 0, width, height };
 
     ray3 ray;
-    float t = 0;
+    double t = 0;
 
     orbit_camera_unproject(rda, t0, viewport, m4inverted);
     orbit_camera_unproject(rdb, tx, viewport, m4inverted);
@@ -234,11 +238,12 @@ int main(void)
 
 
     unsigned hits = 0;
-    for (float y=0; y<height; y++) {
+    for (double y=0; y<height; y++) {
       vec3_add(planeYPosition, planeYPosition, dcol);
       vec3_copy(planeXPosition, planeYPosition);
 
-      for (float x=0; x<width; x++) {
+      for (double x=0; x<width; x++) {
+        pixels++;
         vec3_add(planeXPosition, planeXPosition, drow);
 
         vec3_sub(rd, planeXPosition, ro);
@@ -251,7 +256,6 @@ int main(void)
         // isect = ray_aabb(&ray, bounds, &t);
         isect = ray_isect(ro, rd, bounds);
         if (isect) {
-          hits++;
 
           data[where+0] = 255;
           data[where+1] = 255;
@@ -266,13 +270,8 @@ int main(void)
 
     // printf("hits: %u; total: %u\n", hits, width*height);
 
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-    float aspect = width / (float) height;
+    double aspect = width / (double) height;
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
@@ -288,6 +287,12 @@ int main(void)
 
     glEnable(GL_TEXTURE_2D);
 
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
     glBegin(GL_QUADS);
       glTexCoord2f(0.0f, 0.0f); glVertex2f( -1, -1);
       glTexCoord2f(1.0f, 0.0f); glVertex2f(  1, -1);
@@ -297,7 +302,7 @@ int main(void)
 
     glfwSwapBuffers(window);
 
-    glDeleteTextures(1, &texture[0]);
+    // glDeleteTextures(1, &texture[0]);
     glfwPollEvents();
   }
   glfwDestroyWindow(window);

@@ -26,11 +26,11 @@ uint8_t ray_isect(vec3 ro, vec3 rd, aabb b) {
       1.0 / rd[2]
     };
 
-    float t1 = (b[0][0] - ro[0]) * inv[0];
-    float t2 = (b[1][0] - ro[0]) * inv[0];
+    double t1 = (b[0][0] - ro[0]) * inv[0];
+    double t2 = (b[1][0] - ro[0]) * inv[0];
 
-    float tmin = min(t1, t2);
-    float tmax = max(t1, t2);
+    double tmin = min(t1, t2);
+    double tmax = max(t1, t2);
 
     for (int i = 1; i < 3; ++i) {
         t1 = (b[0][i] - ro[i]) * inv[i];
@@ -44,7 +44,7 @@ uint8_t ray_isect(vec3 ro, vec3 rd, aabb b) {
 }
 
 
-uint8_t ray_aabb(ray3 *r, aabb b, float *t){
+uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   switch (r->classification)
   {
@@ -63,10 +63,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
     // compute the intersection distance
 
       *t = (b[1][0] - r->x) * r->ii;
-      float t1 = (b[1][1] - r->y) * r->ij;
+      double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[1][2] - r->z) * r->ik;
+      double t2 = (b[1][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -87,10 +87,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-      float t1 = (b[1][1] - r->y) * r->ij;
+      double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[0][2] - r->z) * r->ik;
+      double t2 = (b[0][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -110,10 +110,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-    float t1 = (b[0][1] - r->y) * r->ij;
+    double t1 = (b[0][1] - r->y) * r->ij;
     if(t1 > *t)
       *t = t1;
-    float t2 = (b[1][2] - r->z) * r->ik;
+    double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -133,10 +133,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-      float t1 = (b[0][1] - r->y) * r->ij;
+      double t1 = (b[0][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[0][2] - r->z) * r->ik;
+      double t2 = (b[0][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -156,10 +156,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-      float t1 = (b[1][1] - r->y) * r->ij;
+      double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[1][2] - r->z) * r->ik;
+      double t2 = (b[1][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -180,10 +180,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-      float t1 = (b[1][1] - r->y) * r->ij;
+      double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[0][2] - r->z) * r->ik;
+      double t2 = (b[0][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -203,10 +203,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-      float t1 = (b[0][1] - r->y) * r->ij;
+      double t1 = (b[0][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[1][2] - r->z) * r->ik;
+      double t2 = (b[1][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -226,10 +226,10 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-      float t1 = (b[0][1] - r->y) * r->ij;
+      double t1 = (b[0][1] - r->y) * r->ij;
       if(t1 > *t)
         *t = t1;
-      float t2 = (b[0][2] - r->z) * r->ik;
+      double t2 = (b[0][2] - r->z) * r->ik;
       if(t2 > *t)
         *t = t2;
 
@@ -246,7 +246,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][1] - r->y) * r->ij;
-    float t2 = (b[1][2] - r->z) * r->ik;
+    double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -263,7 +263,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][1] - r->y) * r->ij;
-    float t2 = (b[0][2] - r->z) * r->ik;
+    double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -280,7 +280,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][1] - r->y) * r->ij;
-    float t2 = (b[1][2] - r->z) * r->ik;
+    double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -297,7 +297,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][1] - r->y) * r->ij;
-    float t2 = (b[0][2] - r->z) * r->ik;
+    double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -315,7 +315,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-    float t2 = (b[1][2] - r->z) * r->ik;
+    double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -333,7 +333,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-    float t2 = (b[0][2] - r->z) * r->ik;
+    double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -350,7 +350,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-    float t2 = (b[1][2] - r->z) * r->ik;
+    double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -368,7 +368,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-    float t2 = (b[0][2] - r->z) * r->ik;
+    double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
       *t = t2;
 
@@ -385,7 +385,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-    float t1 = (b[1][1] - r->y) * r->ij;
+    double t1 = (b[1][1] - r->y) * r->ij;
     if(t1 > *t)
       *t = t1;
 
@@ -402,7 +402,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[1][0] - r->x) * r->ii;
-    float t1 = (b[0][1] - r->y) * r->ij;
+    double t1 = (b[0][1] - r->y) * r->ij;
     if(t1 > *t)
       *t = t1;
 
@@ -420,7 +420,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-    float t1 = (b[1][1] - r->y) * r->ij;
+    double t1 = (b[1][1] - r->y) * r->ij;
     if(t1 > *t)
       *t = t1;
 
@@ -437,7 +437,7 @@ uint8_t ray_aabb(ray3 *r, aabb b, float *t){
       return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
-    float t1 = (b[0][1] - r->y) * r->ij;
+    double t1 = (b[0][1] - r->y) * r->ij;
     if(t1 > *t)
       *t = t1;
 
