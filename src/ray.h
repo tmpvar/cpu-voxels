@@ -142,7 +142,7 @@ void ray_update(ray3 *r, vec3 ro, vec3 rd)
 {
   //common variables
   r->x = ro[0];
-  r->y = rd[1];
+  r->y = ro[1];
   r->z = ro[2];
   r->i = rd[0];
   r->j = rd[1];
