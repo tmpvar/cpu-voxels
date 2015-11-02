@@ -50,18 +50,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
   {
   case MMM:
     {
-    if ((r->x < b[0][0]) || (r->y < b[0][1]) || (r->z < b[0][2])
-      || (r->jbyi * b[0][0] - b[1][1] + r->c_xy > 0)
-      || (r->ibyj * b[0][1] - b[1][0] + r->c_yx > 0)
-      || (r->jbyk * b[0][2] - b[1][1] + r->c_zy > 0)
-      || (r->kbyj * b[0][1] - b[1][2] + r->c_yz > 0)
-      || (r->kbyi * b[0][0] - b[1][2] + r->c_xz > 0)
-      || (r->ibyk * b[0][2] - b[1][0] + r->c_zx > 0)
-      )
-      return 0;
-
-    // compute the intersection distance
-
       *t = (b[1][0] - r->x) * r->ii;
       double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
@@ -76,16 +64,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MMP:
     {
-    if ((r->x < b[0][0]) || (r->y < b[0][1]) || (r->z > b[1][2])
-      || (r->jbyi * b[0][0] - b[1][1] + r->c_xy > 0)
-      || (r->ibyj * b[0][1] - b[1][0] + r->c_yx > 0)
-      || (r->jbyk * b[1][2] - b[1][1] + r->c_zy > 0)
-      || (r->kbyj * b[0][1] - b[0][2] + r->c_yz < 0)
-      || (r->kbyi * b[0][0] - b[0][2] + r->c_xz < 0)
-      || (r->ibyk * b[1][2] - b[1][0] + r->c_zx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
       double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
@@ -99,16 +77,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MPM:
     {
-    if ((r->x < b[0][0]) || (r->y > b[1][1]) || (r->z < b[0][2])
-      || (r->jbyi * b[0][0] - b[0][1] + r->c_xy < 0)
-      || (r->ibyj * b[1][1] - b[1][0] + r->c_yx > 0)
-      || (r->jbyk * b[0][2] - b[0][1] + r->c_zy < 0)
-      || (r->kbyj * b[1][1] - b[1][2] + r->c_yz > 0)
-      || (r->kbyi * b[0][0] - b[1][2] + r->c_xz > 0)
-      || (r->ibyk * b[0][2] - b[1][0] + r->c_zx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
     double t1 = (b[0][1] - r->y) * r->ij;
     if(t1 > *t)
@@ -122,16 +90,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MPP:
     {
-    if ((r->x < b[0][0]) || (r->y > b[1][1]) || (r->z > b[1][2])
-      || (r->jbyi * b[0][0] - b[0][1] + r->c_xy < 0)
-      || (r->ibyj * b[1][1] - b[1][0] + r->c_yx > 0)
-      || (r->jbyk * b[1][2] - b[0][1] + r->c_zy < 0)
-      || (r->kbyj * b[1][1] - b[0][2] + r->c_yz < 0)
-      || (r->kbyi * b[0][0] - b[0][2] + r->c_xz < 0)
-      || (r->ibyk * b[1][2] - b[1][0] + r->c_zx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
       double t1 = (b[0][1] - r->y) * r->ij;
       if(t1 > *t)
@@ -145,15 +103,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case PMM:
     {
-    if ((r->x > b[1][0]) || (r->y < b[0][1]) || (r->z < b[0][2])
-      || (r->jbyi * b[1][0] - b[1][1] + r->c_xy > 0)
-      || (r->ibyj * b[0][1] - b[0][0] + r->c_yx < 0)
-      || (r->jbyk * b[0][2] - b[1][1] + r->c_zy > 0)
-      || (r->kbyj * b[0][1] - b[1][2] + r->c_yz > 0)
-      || (r->kbyi * b[1][0] - b[1][2] + r->c_xz > 0)
-      || (r->ibyk * b[0][2] - b[0][0] + r->c_zx < 0)
-      )
-      return 0;
 
     *t = (b[0][0] - r->x) * r->ii;
       double t1 = (b[1][1] - r->y) * r->ij;
@@ -169,16 +118,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case PMP:
     {
-    if ((r->x > b[1][0]) || (r->y < b[0][1]) || (r->z > b[1][2])
-      || (r->jbyi * b[1][0] - b[1][1] + r->c_xy > 0)
-      || (r->ibyj * b[0][1] - b[0][0] + r->c_yx < 0)
-      || (r->jbyk * b[1][2] - b[1][1] + r->c_zy > 0)
-      || (r->kbyj * b[0][1] - b[0][2] + r->c_yz < 0)
-      || (r->kbyi * b[1][0] - b[0][2] + r->c_xz < 0)
-      || (r->ibyk * b[1][2] - b[0][0] + r->c_zx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
       double t1 = (b[1][1] - r->y) * r->ij;
       if(t1 > *t)
@@ -192,16 +131,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case PPM:
     {
-    if ((r->x > b[1][0]) || (r->y > b[1][1]) || (r->z < b[0][2])
-      || (r->jbyi * b[1][0] - b[0][1] + r->c_xy < 0)
-      || (r->ibyj * b[1][1] - b[0][0] + r->c_yx < 0)
-      || (r->jbyk * b[0][2] - b[0][1] + r->c_zy < 0)
-      || (r->kbyj * b[1][1] - b[1][2] + r->c_yz > 0)
-      || (r->kbyi * b[1][0] - b[1][2] + r->c_xz > 0)
-      || (r->ibyk * b[0][2] - b[0][0] + r->c_zx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
       double t1 = (b[0][1] - r->y) * r->ij;
       if(t1 > *t)
@@ -215,16 +144,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case PPP:
     {
-    if ((r->x > b[1][0]) || (r->y > b[1][1]) || (r->z > b[1][2])
-      || (r->jbyi * b[1][0] - b[0][1] + r->c_xy < 0)
-      || (r->ibyj * b[1][1] - b[0][0] + r->c_yx < 0)
-      || (r->jbyk * b[1][2] - b[0][1] + r->c_zy < 0)
-      || (r->kbyj * b[1][1] - b[0][2] + r->c_yz < 0)
-      || (r->kbyi * b[1][0] - b[0][2] + r->c_xz < 0)
-      || (r->ibyk * b[1][2] - b[0][0] + r->c_zx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
       double t1 = (b[0][1] - r->y) * r->ij;
       if(t1 > *t)
@@ -238,13 +157,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case OMM:
     {
-    if((r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->y < b[0][1]) || (r->z < b[0][2])
-      || (r->jbyk * b[0][2] - b[1][1] + r->c_zy > 0)
-      || (r->kbyj * b[0][1] - b[1][2] + r->c_yz > 0)
-      )
-      return 0;
-
     *t = (b[1][1] - r->y) * r->ij;
     double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -255,13 +167,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case OMP:
     {
-    if((r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->y < b[0][1]) || (r->z > b[1][2])
-      || (r->jbyk * b[1][2] - b[1][1] + r->c_zy > 0)
-      || (r->kbyj * b[0][1] - b[0][2] + r->c_yz < 0)
-      )
-      return 0;
-
     *t = (b[1][1] - r->y) * r->ij;
     double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -272,13 +177,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case OPM:
     {
-    if((r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->y > b[1][1]) || (r->z < b[0][2])
-      || (r->jbyk * b[0][2] - b[0][1] + r->c_zy < 0)
-      || (r->kbyj * b[1][1] - b[1][2] + r->c_yz > 0)
-      )
-      return 0;
-
     *t = (b[0][1] - r->y) * r->ij;
     double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -289,13 +187,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case OPP:
     {
-    if((r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->y > b[1][1]) || (r->z > b[1][2])
-      || (r->jbyk * b[1][2] - b[0][1] + r->c_zy < 0)
-      || (r->kbyj * b[1][1] - b[0][2] + r->c_yz < 0)
-      )
-      return 0;
-
     *t = (b[0][1] - r->y) * r->ij;
     double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -307,13 +198,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MOM:
     {
-    if((r->y < b[0][1]) || (r->y > b[1][1])
-      || (r->x < b[0][0]) || (r->z < b[0][2])
-      || (r->kbyi * b[0][0] - b[1][2] + r->c_xz > 0)
-      || (r->ibyk * b[0][2] - b[1][0] + r->c_zx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
     double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -325,13 +209,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MOP:
     {
-    if((r->y < b[0][1]) || (r->y > b[1][1])
-      || (r->x < b[0][0]) || (r->z > b[1][2])
-      || (r->kbyi * b[0][0] - b[0][2] + r->c_xz < 0)
-      || (r->ibyk * b[1][2] - b[1][0] + r->c_zx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
     double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -342,13 +219,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case POM:
     {
-    if((r->y < b[0][1]) || (r->y > b[1][1])
-      || (r->x > b[1][0]) || (r->z < b[0][2])
-      || (r->kbyi * b[1][0] - b[1][2] + r->c_xz > 0)
-      || (r->ibyk * b[0][2] - b[0][0] + r->c_zx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
     double t2 = (b[1][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -360,13 +230,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case POP:
     {
-    if((r->y < b[0][1]) || (r->y > b[1][1])
-      || (r->x > b[1][0]) || (r->z > b[1][2])
-      || (r->kbyi * b[1][0] - b[0][2] + r->c_xz < 0)
-      || (r->ibyk * b[1][2] - b[0][0] + r->c_zx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
     double t2 = (b[0][2] - r->z) * r->ik;
     if(t2 > *t)
@@ -377,13 +240,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MMO:
     {
-    if((r->z < b[0][2]) || (r->z > b[1][2])
-      || (r->x < b[0][0]) || (r->y < b[0][1])
-      || (r->jbyi * b[0][0] - b[1][1] + r->c_xy > 0)
-      || (r->ibyj * b[0][1] - b[1][0] + r->c_yx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
     double t1 = (b[1][1] - r->y) * r->ij;
     if(t1 > *t)
@@ -394,13 +250,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MPO:
     {
-    if((r->z < b[0][2]) || (r->z > b[1][2])
-      || (r->x < b[0][0]) || (r->y > b[1][1])
-      || (r->jbyi * b[0][0] - b[0][1] + r->c_xy < 0)
-      || (r->ibyj * b[1][1] - b[1][0] + r->c_yx > 0)
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
     double t1 = (b[0][1] - r->y) * r->ij;
     if(t1 > *t)
@@ -412,13 +261,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case PMO:
     {
-    if((r->z < b[0][2]) || (r->z > b[1][2])
-      || (r->x > b[1][0]) || (r->y < b[0][1])
-      || (r->jbyi * b[1][0] - b[1][1] + r->c_xy > 0)
-      || (r->ibyj * b[0][1] - b[0][0] + r->c_yx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
     double t1 = (b[1][1] - r->y) * r->ij;
     if(t1 > *t)
@@ -429,13 +271,6 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case PPO:
     {
-    if((r->z < b[0][2]) || (r->z > b[1][2])
-      || (r->x > b[1][0]) || (r->y > b[1][1])
-      || (r->jbyi * b[1][0] - b[0][1] + r->c_xy < 0)
-      || (r->ibyj * b[1][1] - b[0][0] + r->c_yx < 0)
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
     double t1 = (b[0][1] - r->y) * r->ij;
     if(t1 > *t)
@@ -447,48 +282,24 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case MOO:
     {
-    if((r->x < b[0][0])
-      || (r->y < b[0][1]) || (r->y > b[1][1])
-      || (r->z < b[0][2]) || (r->z > b[1][2])
-      )
-      return 0;
-
     *t = (b[1][0] - r->x) * r->ii;
     return 1;
     }
 
   case POO:
     {
-    if((r->x > b[1][0])
-      || (r->y < b[0][1]) || (r->y > b[1][1])
-      || (r->z < b[0][2]) || (r->z > b[1][2])
-      )
-      return 0;
-
     *t = (b[0][0] - r->x) * r->ii;
     return 1;
     }
 
   case OMO:
     {
-    if((r->y < b[0][1])
-      || (r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->z < b[0][2]) || (r->z > b[1][2])
-      )
-      return 0;
-
     *t = (b[1][1] - r->y) * r->ij;
     return 1;
     }
 
   case OPO:
     {
-    if((r->y > b[1][1])
-      || (r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->z < b[0][2]) || (r->z > b[1][2])
-      )
-      return 0;
-
     *t = (b[0][1] - r->y) * r->ij;
     return 1;
     }
@@ -496,30 +307,291 @@ uint8_t ray_aabb(ray3 *r, aabb b, double *t){
 
   case OOM:
     {
-    if((r->z < b[0][2])
-      || (r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->y < b[0][1]) || (r->y > b[1][1])
-      )
-      return 0;
-
     *t = (b[1][2] - r->z) * r->ik;
     return 1;
     }
 
   case OOP:
     {
-    if((r->z > b[1][2])
-      || (r->x < b[0][0]) || (r->x > b[1][0])
-      || (r->y < b[0][1]) || (r->y > b[1][1])
-      )
-      return 0;
-
     *t = (b[0][2] - r->z) * r->ik;
     return 1;
     }
   }
 
   return 0;
+}
+
+static inline double ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
+
+  double a, b, c;
+
+  switch (r->classification) {
+    case MMM:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[1][1] - ro[1]) * r->ij;
+      c = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ? 1 : 0;
+      norm[1] = (b >= c && b >= a) ? 1 : 0;
+      norm[2] = (c >= a && c >= b) ? 1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case MMP:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[1][1] - ro[1]) * r->ij;
+      c = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ?  1 : 0;
+      norm[1] = (b >= c && b >= a) ?  1 : 0;
+      norm[2] = (c >= a && c >= b) ? -1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case MPM:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[0][1] - ro[1]) * r->ij;
+      c = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ?  1 : 0;
+      norm[1] = (b >= c && b >= a) ? -1 : 0;
+      norm[2] = (c >= a && c >= b) ?  1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case MPP:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[0][1] - ro[1]) * r->ij;
+      c = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ?  1 : 0;
+      norm[1] = (b >= c && b >= a) ? -1 : 0;
+      norm[2] = (c >= a && c >= b) ? -1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case PMM:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[1][1] - ro[1]) * r->ij;
+      c = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ? -1 : 0;
+      norm[1] = (b >= c && b >= a) ?  1 : 0;
+      norm[2] = (c >= a && c >= b) ?  1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case PMP:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[1][1] - ro[1]) * r->ij;
+      c = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ? -1 : 0;
+      norm[1] = (b >= c && b >= a) ?  1 : 0;
+      norm[2] = (c >= a && c >= b) ? -1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case PPM:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[0][1] - ro[1]) * r->ij;
+      c = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ? -1 : 0;
+      norm[1] = (b >= c && b >= a) ? -1 : 0;
+      norm[2] = (c >= a && c >= b) ?  1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case PPP:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[0][1] - ro[1]) * r->ij;
+      c = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b && a >= c) ? -1 : 0;
+      norm[1] = (b >= c && b >= a) ? -1 : 0;
+      norm[2] = (c >= a && c >= b) ? -1 : 0;
+
+      return max(max(a, b), c);
+    break;
+
+    case OMM:
+      a = (box[1][1] - ro[1]) * r->ij;
+      b = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = 0;
+      norm[1] = (a >= b) ? 1 : 0;
+      norm[2] = (b >= a) ? 1 : 0;
+
+      return max(a, b);
+    break;
+
+    case OMP:
+      norm[0] = 0;
+      norm[1] = (a >= b) ?  1 : 0;
+      norm[2] = (b >= a) ? -1 : 0;
+
+      return max(a, b);
+    break;
+
+    case OPM:
+      a = (box[0][1] - ro[1]) * r->ij;
+      b = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = 0;
+      norm[1] = (a >= b) ? -1 : 0;
+      norm[2] = (b >= a) ?  1 : 0;
+
+      return max(a, b);
+    break;
+
+    case OPP:
+      a = (box[0][1] - ro[1]) * r->ij;
+      b = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = 0;
+      norm[1] = (a >= b) ? -1 : 0;
+      norm[2] = (b >= a) ? -1 : 0;
+
+      return max(a, b);
+    break;
+
+    case MOM:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b) ? 1 : 0;
+      norm[1] = 0;
+      norm[2] = (b >= a) ? 1 : 0;
+
+      return max(a, b);
+    break;
+
+    case MOP:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b) ?  1 : 0;
+      norm[1] = 0;
+      norm[2] = (b >= a) ? -1 : 0;
+
+      return max(a, b);
+    break;
+
+    case POM:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[1][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b) ? -1 : 0;
+      norm[1] = 0;
+      norm[2] = (b >= a) ?  1 : 0;
+
+      return max(a, b);
+    break;
+
+    case POP:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[0][2] - ro[2]) * r->ik;
+
+      norm[0] = (a >= b) ? -1 : 0;
+      norm[1] = 0;
+      norm[2] = (b >= a) ? -1 : 0;
+
+      return max(a, b);
+    break;
+
+    case MMO:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[1][1] - ro[1]) * r->ij;
+
+      norm[0] = (a >= b) ? 1 : 0;
+      norm[1] = (b >= a) ? 1 : 0;
+      norm[2] = 0;
+
+      return max(a, b);
+    break;
+
+    case MPO:
+      a = (box[1][0] - ro[0]) * r->ii;
+      b = (box[0][1] - ro[1]) * r->ij;
+
+      norm[0] = (a >= b) ?  1 : 0;
+      norm[1] = (b >= a) ? -1 : 0;
+      norm[2] = 0;
+
+      return max(a, b);
+    break;
+
+    case PMO:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[1][1] - ro[1]) * r->ij;
+
+      norm[0] = (a >= b) ? -1 : 0;
+      norm[1] = (b >= a) ?  1 : 0;
+      norm[2] = 0;
+
+      return max(a, b);
+    break;
+
+    case PPO:
+      a = (box[0][0] - ro[0]) * r->ii;
+      b = (box[0][1] - ro[1]) * r->ij;
+
+      norm[0] = (a >= b) ? -1 : 0;
+      norm[1] = (b >= a) ? -1 : 0;
+      norm[2] = 0;
+
+      return max(a, b);
+    break;
+
+    case MOO:
+      norm[0] = 1;
+      norm[1] = norm[2] = 0;
+      return (box[1][0] - ro[0]) * r->ii;
+    break;
+
+    case POO:
+      norm[0] = -1;
+      norm[1] = norm[2] = 0;
+      return (box[0][0] - ro[0]) * r->ii;
+    break;
+
+    case OMO:
+      norm[0] = 0;
+      norm[1] = 1;
+      norm[2] = 0;
+      return (box[1][1] - ro[1]) * r->ij;
+    break;
+
+    case OPO:
+      norm[0] = 0;
+      norm[1] = -1;
+      norm[2] = 0;
+      return (box[0][1] - ro[1]) * r->ij;
+    break;
+
+    case OOM:
+      norm[0] = norm[1] = 0;
+      norm[2] = 1;
+      return (box[1][2] - ro[2]) * r->ik;
+    break;
+
+    case OOP:
+      norm[0] = norm[1] = 0;
+      norm[2] = -1;
+      return (box[0][2] - ro[2]) * r->ik;
+    break;
+  }
+
+  norm[0] = norm[1] = norm[2] = 0;
+  return -1;
 }
 
 #endif

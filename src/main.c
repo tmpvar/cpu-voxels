@@ -244,28 +244,34 @@ int main(void)
 
 
     unsigned hits = 0;
-    for (double y=0; y<height; y++) {
+    vec3 normal;
+    for (int y=0; y<height; y++) {
       vec3_add(planeYPosition, planeYPosition, dcol);
       vec3_copy(planeXPosition, planeYPosition);
 
-      for (double x=0; x<width; x++) {
+      for (int x=0; x<width; x++) {
         pixels++;
         vec3_add(planeXPosition, planeXPosition, drow);
 
         vec3_sub(rd, planeXPosition, ro);
-//        vec3_norm(rd, rd);
+
 
         unsigned long where = y * width * stride + x * stride;
         uint8_t isect;
 
-        // ray_update(&ray, ro, rd);
-        // isect = ray_aabb(&ray, bounds, &t);
+
         isect = ray_isect(ro, rd, bounds);
         if (isect) {
+          vec3_norm(rd, rd);
+          ray_update(&ray, ro, rd);
+          t = ray_aabb_lerp(&ray, ro, bounds, normal);
+          // ray_aabb(&ray, bounds, &t);
 
-          data[where+0] = 255;
-          data[where+1] = 255;
-          data[where+2] = 255;
+          pixels++;
+
+          data[where+0] = (int)(127 * normal[0]) + 127;//(int)(255 * (t/50));
+          data[where+1] = (int)(127 * normal[1]) + 127;//(int)(255 * (t/50));
+          data[where+2] = (int)(127 * normal[2]) + 127;//(int)(255 * (t/50));
         } else {
           data[where+0] = 0;
           data[where+1] = 0;
