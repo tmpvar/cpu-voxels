@@ -198,7 +198,7 @@ int main(void)
     1000.0
   );
 
-  glGenTextures(1, &texture);
+  glGenTextures(1, texture);
   double start = glfwGetTime();
   int fps = 0;
   unsigned long pixels = 0;
@@ -236,7 +236,7 @@ int main(void)
     vec3_sub(dcol, planeYPosition, rda);
     vec3_sub(drow, rdb, rda);
 
-
+    vec3 normal;
     unsigned hits = 0;
     for (double y=0; y<height; y++) {
       vec3_add(planeYPosition, planeYPosition, dcol);
@@ -247,19 +247,20 @@ int main(void)
         vec3_add(planeXPosition, planeXPosition, drow);
 
         vec3_sub(rd, planeXPosition, ro);
-//        vec3_norm(rd, rd);
 
         unsigned long where = y * width * stride + x * stride;
         uint8_t isect;
 
-        // ray_update(&ray, ro, rd);
-        // isect = ray_aabb(&ray, bounds, &t);
-        isect = ray_isect(ro, rd, bounds);
+        ray_update(&ray, ro, rd);
+        isect = ray_isect(&ray, ro, rd, bounds);
         if (isect) {
+       // vec3_norm(rd, rd);
+          t = ray_aabb_lerp(&ray, ro, bounds, normal);
 
-          data[where+0] = 255;
-          data[where+1] = 255;
-          data[where+2] = 255;
+
+          data[where+0] = (int)(normal[0] * 127 + 127);
+          data[where+1] = (int)(normal[1] * 127 + 127);
+          data[where+2] = (int)(normal[2] * 127 + 127);
         } else {
           data[where+0] = 0;
           data[where+1] = 0;
