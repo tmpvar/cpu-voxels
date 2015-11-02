@@ -87,7 +87,6 @@ static void error_callback(int error, const char* description) {
   fputs(description, stderr);
 }
 
-uint8_t render = 1;
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     switch (key) {
@@ -105,11 +104,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
       case GLFW_KEY_DOWN:
         orbit_camera_rotate(0, 0, 0, .1);
-      break;
-
-      case GLFW_KEY_SPACE:
-        render = render ? 0 : 1;
-        printf("render: %u\n", render);
       break;
 
       case  GLFW_KEY_ESCAPE:
@@ -275,40 +269,40 @@ int main(void)
     }
 
     // printf("hits: %u; total: %u\n", hits, width*height);
+
+
     double aspect = width / (double) height;
-    if (render) {
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
 
-      glViewport(0, 0, width, height);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glDisable(GL_CULL_FACE);
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glScalef(1.0f, -1.0f, 1.0f);
 
-      glMatrixMode(GL_TEXTURE);
-      glLoadIdentity();
-      glScalef(1.0f, -1.0f, 1.0f);
+    glEnable(GL_TEXTURE_2D);
 
-      glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
-      glBindTexture(GL_TEXTURE_2D, texture[0]);
-      glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
-      glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glBegin(GL_QUADS);
+      glTexCoord2f(0.0f, 0.0f); glVertex2f( -1, -1);
+      glTexCoord2f(1.0f, 0.0f); glVertex2f(  1, -1);
+      glTexCoord2f(1.0f, 1.0f); glVertex2f(  1,  1);
+      glTexCoord2f(0.0f, 1.0f); glVertex2f( -1,  1);
+    glEnd();
 
-      glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex2f( -1, -1);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(  1, -1);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(  1,  1);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f( -1,  1);
-      glEnd();
+    glfwSwapBuffers(window);
 
-      glfwSwapBuffers(window);
-    }
-
+    // glDeleteTextures(1, &texture[0]);
     glfwPollEvents();
   }
   glfwDestroyWindow(window);
