@@ -6,6 +6,8 @@
 typedef double mat3[9];
 typedef double mat4[16];
 typedef double quat[4];
+typedef double vec3[3];
+
 
 #define LINMATH_H_DEFINE_VEC(n) \
 typedef double vec##n[n]; \
@@ -47,13 +49,41 @@ static inline double vec##n##_distance(vec##n const a, vec##n const b) \
 }
 
 LINMATH_H_DEFINE_VEC(2)
-LINMATH_H_DEFINE_VEC(3)
+// LINMATH_H_DEFINE_VEC(3)
 LINMATH_H_DEFINE_VEC(4)
 
 /* ok then */
 
 static inline void vec3_zero(vec3 r) {
   r[0] = r[1] = r[2] = 0;
+}
+
+static inline void vec3_add(vec3 r, vec3 const a, vec3 const b) {
+  r[0] = a[0] + b[0];
+  r[1] = a[1] + b[1];
+  r[2] = a[2] + b[2];
+}
+
+static inline void vec3_sub(vec3 r, vec3 const a, vec3 const b) {
+  r[0] = a[0] - b[0];
+  r[1] = a[1] - b[1];
+  r[2] = a[2] - b[2];
+}
+
+static inline void vec3_scale(vec3 r, vec3 const v, double const s) {
+  r[0] = v[0] * s;
+  r[1] = v[1] * s;
+  r[2] = v[2] * s;
+}
+
+static inline double vec3_len(vec3 const v) {
+  return sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+static inline double vec3_distance(vec3 const a, vec3 const b) {
+  vec3 scratch;
+  vec3_sub(scratch, a, b);
+  return vec3_len(scratch);
 }
 
 static inline void vec3_copy(vec3 r, const vec3 a) {
@@ -106,15 +136,15 @@ static inline void vec4_norm(vec4 r, vec4 const v) {
 }
 
 
-static inline void vec3_reflect(vec3 r, vec3 const v, vec3 const n)
-{
-  double p  = 2.f*vec3_mul_inner(v, n);
-  int i;
-  for(i=0;i<3;++i)
-  r[i] = v[i] - p*n[i];
-}
+// static inline void vec3_reflect(vec3 r, vec3 const v, vec3 const n)
+// {
+//   float p  = 2.f*vec3_mul_inner(v, n);
+//   int i;
+//   for(i=0;i<3;++i)
+//   r[i] = v[i] - p*n[i];
+// }
 
-static inline void vec4_mul_cross(vec4 r, vec4 a, vec4 b)
+static inline void vec4_mul_cross(vec4 r, const vec4 a, const vec4 b)
 {
   r[0] = a[1]*b[2] - a[2]*b[1];
   r[1] = a[2]*b[0] - a[0]*b[2];
@@ -124,7 +154,7 @@ static inline void vec4_mul_cross(vec4 r, vec4 a, vec4 b)
 
 static inline void vec4_reflect(vec4 r, vec4 v, vec4 n)
 {
-  double p  = 2.f*vec4_mul_inner(v, n);
+  const double p  = 2.f*vec4_mul_inner(v, n);
   int i;
   for(i=0;i<4;++i)
   r[i] = v[i] - p*n[i];
@@ -167,23 +197,23 @@ static inline void mat4_set(mat4 m,
 }
 
 static inline uint8_t mat4_invert(mat4 r, const mat4 a) {
-  double a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+  const double a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-  double b00 = a00 * a11 - a01 * a10;
-  double b01 = a00 * a12 - a02 * a10;
-  double b02 = a00 * a13 - a03 * a10;
-  double b03 = a01 * a12 - a02 * a11;
-  double b04 = a01 * a13 - a03 * a11;
-  double b05 = a02 * a13 - a03 * a12;
-  double b06 = a20 * a31 - a21 * a30;
-  double b07 = a20 * a32 - a22 * a30;
-  double b08 = a20 * a33 - a23 * a30;
-  double b09 = a21 * a32 - a22 * a31;
-  double b10 = a21 * a33 - a23 * a31;
-  double b11 = a22 * a33 - a23 * a32;
+  const double b00 = a00 * a11 - a01 * a10;
+  const double b01 = a00 * a12 - a02 * a10;
+  const double b02 = a00 * a13 - a03 * a10;
+  const double b03 = a01 * a12 - a02 * a11;
+  const double b04 = a01 * a13 - a03 * a11;
+  const double b05 = a02 * a13 - a03 * a12;
+  const double b06 = a20 * a31 - a21 * a30;
+  const double b07 = a20 * a32 - a22 * a30;
+  const double b08 = a20 * a33 - a23 * a30;
+  const double b09 = a21 * a32 - a22 * a31;
+  const double b10 = a21 * a33 - a23 * a31;
+  const double b11 = a22 * a33 - a23 * a32;
 
   // Calculate the determinant
   double det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
@@ -224,7 +254,7 @@ static inline void mat4_get_eye(vec3 v, const mat4 m) {
 }
 
 static inline void mat4_mul(mat4 r, mat4 a, mat4 b) {
-  double a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+  const double a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
@@ -256,13 +286,13 @@ static inline void mat4_mul(mat4 r, mat4 a, mat4 b) {
 
 }
 
-static inline void mat4_perspective(mat4 m, double fovy, double aspect, double near, double far) {
-  double f = 1.0 / tanf(fovy / 2);
-  double nf = 1 / (near - far);
-  double a = f / aspect;
+static inline void mat4_perspective(mat4 m, const double fovy, const double aspect, const double near, const double far) {
+  const double f = 1.0 / tanf(fovy / 2);
+  const double nf = 1 / (near - far);
+  const double a = f / aspect;
 
-  double b = (far + near) * nf;
-  double c = (2.0 * far * near) * nf;
+  const double b = (far + near) * nf;
+  const double c = (2.0 * far * near) * nf;
 
   mat4_set(m,
     a, 0, 0,  0,
@@ -272,7 +302,7 @@ static inline void mat4_perspective(mat4 m, double fovy, double aspect, double n
   );
 }
 
-static inline void mat4_transpose(mat4 r, mat4 m) {
+static inline void mat4_transpose(mat4 r, const mat4 m) {
   mat4_set(r,
     m[0], m[4],  m[8], m[12],
     m[1], m[5],  m[9], m[13],
@@ -290,8 +320,8 @@ static inline void mat4_identity(mat4 m) {
   );
 }
 
-static inline void mat4_from_rotation_translation(mat4 m, quat q, vec3 v) {
-  double x = q[0], y = q[1], z = q[2], w = q[3],
+static inline void mat4_from_rotation_translation(mat4 m, const quat q, const vec3 v) {
+  const double x = q[0], y = q[1], z = q[2], w = q[3],
       x2 = x + x,
       y2 = y + y,
       z2 = z + z,
@@ -326,17 +356,17 @@ static inline void mat4_from_rotation_translation(mat4 m, quat q, vec3 v) {
   );
 }
 
-static inline void mat4_look_at(mat4 m, vec3 eye, vec3 center, vec3 up) {
+static inline void mat4_look_at(mat4 m, const vec3 eye, const vec3 center, const vec3 up) {
   double x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
-  double eyex = eye[0];
-  double eyey = eye[1];
-  double eyez = eye[2];
-  double upx = up[0];
-  double upy = up[1];
-  double upz = up[2];
-  double centerx = center[0];
-  double centery = center[1];
-  double centerz = center[2];
+  const double eyex = eye[0];
+  const double eyey = eye[1];
+  const double eyez = eye[2];
+  const double upx = up[0];
+  const double upy = up[1];
+  const double upz = up[2];
+  const double centerx = center[0];
+  const double centery = center[1];
+  const double centerz = center[2];
 
   if (eyex == centerx && eyey == centery && eyez == centerz) {
     return mat4_identity(m);
@@ -357,7 +387,7 @@ static inline void mat4_look_at(mat4 m, vec3 eye, vec3 center, vec3 up) {
   x0 = upy * z2 - upz * z1;
   x1 = upz * z0 - upx * z2;
   x2 = upx * z1 - upy * z0;
-  len = sqrtf(x0 * x0 + x1 * x1 + x2 * x2);
+  len = sqrt(x0 * x0 + x1 * x1 + x2 * x2);
   if (!len) {
     x0 = 0;
     x1 = 0;
@@ -374,7 +404,7 @@ static inline void mat4_look_at(mat4 m, vec3 eye, vec3 center, vec3 up) {
   y1 = z2 * x0 - z0 * x2;
   y2 = z0 * x1 - z1 * x0;
 
-  len = sqrtf(y0 * y0 + y1 * y1 + y2 * y2);
+  len = sqrt(y0 * y0 + y1 * y1 + y2 * y2);
   if (!len) {
     y0 = 0;
     y1 = 0;
@@ -414,9 +444,9 @@ static inline void quat_sub(quat r, quat a, quat b)
   for(i=0; i<4; ++i)
   r[i] = a[i] - b[i];
 }
-static inline void quat_mul(quat r, quat a, quat b)
+static inline void quat_mul(quat r, const quat a, const quat b)
 {
-  double ax = a[0], ay = a[1], az = a[2], aw = a[3],
+  const double ax = a[0], ay = a[1], az = a[2], aw = a[3],
       bx = b[0], by = b[1], bz = b[2], bw = b[3];
 
   r[0] = ax * bw + aw * bx + ay * bz - az * by;
@@ -424,7 +454,7 @@ static inline void quat_mul(quat r, quat a, quat b)
   r[2] = az * bw + aw * bz + ax * by - ay * bx;
   r[3] = aw * bw - ax * bx - ay * by - az * bz;
 }
-static inline void quat_scale(quat r, quat v, double s)
+static inline void quat_scale(quat r, const quat v, const double s)
 {
   int i;
   for(i=0; i<4; ++i)
@@ -438,14 +468,14 @@ static inline double quat_inner_product(quat a, quat b) {
   return p;
 }
 
-static inline void quat_conj(quat r, quat q) {
+static inline void quat_conj(quat r, const quat q) {
   r[0] = -q[0];
   r[1] = -q[1];
   r[2] = -q[2];
   r[3] =  q[3];
 }
 
-static inline void quat_rotate(quat r, double angle, vec3 axis) {
+static inline void quat_rotate(quat r, const double angle, const vec3 axis) {
   vec3 v;
   vec3_scale(v, axis, sinf(angle / 2));
   int i;
@@ -454,7 +484,7 @@ static inline void quat_rotate(quat r, double angle, vec3 axis) {
   r[3] = cosf(angle / 2);
 }
 #define quat_norm vec4_norm
-static inline void quat_mul_vec3(vec3 r, quat q, vec3 v)
+static inline void quat_mul_vec3(vec3 r, const quat q, const vec3 v)
 {
 /*
  * Method by Fabian 'ryg' Giessen (of Farbrausch)
@@ -462,7 +492,7 @@ t = 2 * cross(q.xyz, v)
 v' = v + q.w * t + cross(q.xyz, t)
  */
   vec3 t;
-  vec3 q_xyz = {q[0], q[1], q[2]};
+  const vec3 q_xyz = {q[0], q[1], q[2]};
   vec3 u = {q[0], q[1], q[2]};
 
   vec3_mul_cross(t, q_xyz, v);
@@ -492,7 +522,7 @@ static inline void quat_invert(quat r, const quat a) {
   r[3] = a3 * invDot;
 }
 
-static inline void quat_from_mat4(quat q, mat4 m4) {
+static inline void quat_from_mat4(quat q, const mat4 m4) {
   mat3 m;
   mat3_from_mat4(m, m4);
 

@@ -20,7 +20,7 @@ struct {
   mat4 scratch0, scratch1;
 } orbit_camera;
 
-void orbit_camera_lookat(vec3 eye, vec3 center, vec3 up) {
+static void orbit_camera_lookat(const vec3 eye, const vec3 center, const vec3 up) {
   mat4_look_at(orbit_camera.scratch0, eye, center, up);
   quat_from_mat4(orbit_camera.rotation, orbit_camera.scratch0);
   quat_norm(orbit_camera.rotation, orbit_camera.rotation);
@@ -28,14 +28,14 @@ void orbit_camera_lookat(vec3 eye, vec3 center, vec3 up) {
   orbit_camera.distance = vec3_distance(eye, center);
 }
 
-void orbit_camera_init(vec3 eye, vec3 center, vec3 up) {
+static void orbit_camera_init(const vec3 eye, const vec3 center, const vec3 up) {
   quat_identity(orbit_camera.rotation);
   orbit_camera_lookat(eye, center, up);
 }
 
-void orbit_camera_rotate(double sx, double sy, double ex, double ey) {
-  vec3 vs = { sx, sy, 0.0f };
-  vec3 ve = { ex, ey, 0.0f };
+static void orbit_camera_rotate(const double sx, const double sy, const double ex, const double ey) {
+  const vec3 vs = { sx, sy, 0.0f };
+  const vec3 ve = { ex, ey, 0.0f };
   quat s, e;
 
   quat_from_vec3(s, vs);
@@ -53,7 +53,7 @@ void orbit_camera_rotate(double sx, double sy, double ex, double ey) {
   quat_norm(orbit_camera.rotation, orbit_camera.rotation);
 }
 
-void orbit_camera_unproject(vec3 r, vec3 vec, vec4 viewport, mat4 inv) {
+static void orbit_camera_unproject(vec3 r, const vec3 vec, const vec4 viewport, const mat4 inv) {
   double viewX = viewport[0];
   double viewY = viewport[1];
   double viewWidth = viewport[2];
@@ -74,7 +74,7 @@ void orbit_camera_unproject(vec3 r, vec3 vec, vec4 viewport, mat4 inv) {
   vec3_transform(r, r, inv);
 }
 
-void orbit_camera_view(mat4 view) {
+static void orbit_camera_view(const mat4 view) {
   quat q;
   vec3 s = { 0.0, 0.0, -orbit_camera.distance };
   quat_conj(q, orbit_camera.rotation);
