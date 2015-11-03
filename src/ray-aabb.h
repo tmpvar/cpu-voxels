@@ -41,7 +41,7 @@ uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
   return tmax >= max(0.0, tmin);
 }
 
-static inline double ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
+static double ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
 
   double a, b, c;
 

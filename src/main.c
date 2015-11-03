@@ -90,22 +90,6 @@ static void error_callback(int error, const char* description) {
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     switch (key) {
-      case GLFW_KEY_LEFT:
-        orbit_camera_rotate(0, 0, -.1, 0);
-      break;
-
-      case GLFW_KEY_RIGHT:
-        orbit_camera_rotate(0, 0, .1, 0);
-      break;
-
-      case GLFW_KEY_UP:
-        orbit_camera_rotate(0, 0, 0, -.1);
-      break;
-
-      case GLFW_KEY_DOWN:
-        orbit_camera_rotate(0, 0, 0, .1);
-      break;
-
       case  GLFW_KEY_ESCAPE:
         glfwSetWindowShouldClose(window, GL_TRUE);
       break;
@@ -145,15 +129,16 @@ void vec3_print(vec3 v) {
 
 int main(void)
 {
+  int width = 800, height = 600;
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(800, 600, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(width, height, "Simple example", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
-    exit(EXIT_FAILURE);
+    return 1;
   }
   glfwMakeContextCurrent(window);
   glfwSwapInterval(0);
@@ -168,7 +153,7 @@ int main(void)
 
   orbit_camera_init(eye, center, up);
 
-  int width, height;
+
 
   // TODO: handle resize
 
@@ -185,24 +170,39 @@ int main(void)
 
   vec3 ro, rd;
   mat4 m4inverted, view;
-
-  GLuint texture[1];
-
   mat4 projection;
-  mat4_identity(projection);
   mat4_perspective(
     projection,
     M_PI/4.0,
-    dw / dh,
+    (double)width/(double)height,
     0.1,
     1000.0
   );
+  GLuint texture[1];
 
   glGenTextures(1, texture);
   double start = glfwGetTime();
   int fps = 0;
   unsigned long pixels = 0;
   while (!glfwWindowShouldClose(window)) {
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+      orbit_camera_rotate(0, 0, -.1, 0);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+      orbit_camera_rotate(0, 0, .1, 0);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+      orbit_camera_rotate(0, 0, 0, .1);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+      orbit_camera_rotate(0, 0, 0, -.1);
+    }
+
+
+
     double now = glfwGetTime();
     if (now - start > 1) {
       printf("fps: %i (%f Mrays/s)\n", fps, pixels/1000000.0f);
@@ -232,12 +232,11 @@ int main(void)
     orbit_camera_unproject(rda, t0, viewport, m4inverted);
     orbit_camera_unproject(rdb, tx, viewport, m4inverted);
     orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
-
+    // vec3_scale(planeYPosition, planeYPosition, width/height);
     vec3_sub(dcol, planeYPosition, rda);
     vec3_sub(drow, rdb, rda);
 
     vec3 normal;
-    unsigned hits = 0;
     double x, y;
     for (y=0; y<height; ++y) {
       vec3_add(planeYPosition, planeYPosition, dcol);
@@ -252,7 +251,7 @@ int main(void)
         unsigned long where = y * width * stride + x * stride;
         uint8_t isect;
 
-        ray_update(&ray, ro, rd);
+        ray_update(&ray, rd);
         isect = ray_isect(&ray, ro, rd, bounds);
         if (isect) {
        // vec3_norm(rd, rd);
@@ -272,8 +271,6 @@ int main(void)
 
     // printf("hits: %u; total: %u\n", hits, width*height);
 
-
-    double aspect = width / (double) height;
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
