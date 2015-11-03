@@ -62,7 +62,7 @@ typedef struct ray_t
   double c_xy, c_xz, c_yx, c_yz, c_zx, c_zy;
 } ray3;
 
-static void ray_classify(ray3 *r, vec3 rd) {
+static inline void ray_classify(ray3 *r, vec3 rd) {
   // sign
   int i = (rd[0] > 0) - (rd[0] < 0);
   int j = (rd[1] > 0) - (rd[1] < 0);
@@ -75,24 +75,19 @@ static void ray_classify(ray3 *r, vec3 rd) {
   //    |||_ j negative (false)
   //    ||_ i non-zero (true)
   //    |_ i negative (true)
-  r->classification = (i<0) << 5 | (i&1) << 4 |
-                      (j<0) << 3 | (j&1) << 2 |
-                      (k<0) << 1 | (k&1);
+  r->classification = (i<0) << 5 |
+                      (i&1) << 4 |
+                      (j<0) << 3 |
+                      (j&1) << 2 |
+                      (k<0) << 1 |
+                      (k&1);
 }
 
-void ray_update(ray3 *r, vec3 ro, vec3 rd)
+static inline void ray_update(ray3 *r, vec3 ro, vec3 rd)
 {
-  //common variables
-  r->x = ro[0];
-  r->y = ro[1];
-  r->z = ro[2];
-  r->i = rd[0];
-  r->j = rd[1];
-  r->k = rd[2];
-
-  r->ii = r->i == 0 ? 0.0 : 1.0f/r->i;
-  r->ij = r->j == 0 ? 0.0 : 1.0f/r->j;
-  r->ik = r->k == 0 ? 0.0 : 1.0f/r->k;
+  r->ii = 1.0f/rd[0];
+  r->ij = 1.0f/rd[1];
+  r->ik = 1.0f/rd[2];
 
   ray_classify(r, rd);
 }

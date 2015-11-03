@@ -238,11 +238,12 @@ int main(void)
 
     vec3 normal;
     unsigned hits = 0;
-    for (double y=0; y<height; y++) {
+    double x, y;
+    for (y=0; y<height; ++y) {
       vec3_add(planeYPosition, planeYPosition, dcol);
       vec3_copy(planeXPosition, planeYPosition);
 
-      for (double x=0; x<width; x++) {
+      for (x=0; x<width; ++x) {
         pixels++;
         vec3_add(planeXPosition, planeXPosition, drow);
 
