@@ -15,12 +15,13 @@ include_directories(deps/linmath)
 # configure glfw
 set(GLFW_BUILD_EXAMPLES OFF)
 add_subdirectory(deps/glfw)
-include_directories(deps/glfw/include)
+include_directories(deps/glfw/include deps/glfw/deps)
 
 
 add_executable(
     cpuvoxels
     src/main.c
+    deps/glfw/deps/tinycthread.c
     ${GLFW_LIBRARIES}
 )
 

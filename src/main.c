@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tinycthread.h>
 
 #include "aabb.h"
 #include "ray.h"
@@ -127,6 +128,80 @@ void vec3_print(vec3 v) {
   printf("(%f, %f, %f)\n", v[0], v[1], v[2]);
 }
 
+typedef struct {
+  uint8_t *data;
+  int x;
+  int y;
+  int width;
+  int height;
+  int stride;
+  vec3 pos;
+  vec3 dcol;
+  vec3 drow;
+  vec3 ro;
+  vec4 color;
+  aabb bounds;
+} screen_area;
+
+int render_screen_area(void *args) {
+
+  ray3 ray;
+  double t = 0;
+  int pixels = 0;
+  screen_area *c = (screen_area *)args;
+  int width = c->width;
+  int height = c->height;
+  int stride = c->stride;
+  vec3 planeYPosition;
+  vec3_copy(planeYPosition, c->pos);
+  vec3 planeXPosition;
+
+  vec3 dcol, drow, ro, rd, normal;
+  vec3_copy(dcol, c->dcol);
+  vec3_copy(drow, c->drow);
+  vec3_copy(ro, c->ro);
+  uint8_t *data = c->data;
+
+  int x, y;
+  for (y=0; y<height; ++y) {
+    vec3_add(planeYPosition, planeYPosition, dcol);
+    vec3_copy(planeXPosition, planeYPosition);
+    if (y < c->y) {
+      continue;
+    }
+    for (x=0; x<width; ++x) {
+      if (x < c->x) {
+        continue;
+      }
+      ++pixels;
+      vec3_add(planeXPosition, planeXPosition, drow);
+      vec3_sub(rd, planeXPosition, ro);
+
+      unsigned long where = y * width * stride + x * stride;
+      uint8_t isect;
+
+      ray_update(&ray, rd);
+      isect = ray_isect(&ray, ro, rd, c->bounds);
+
+      if (isect) {
+     // vec3_norm(rd, rd);
+        t = ray_aabb_lerp(&ray, ro, c->bounds, normal);
+
+        data[where+0] = (int)(normal[0] * 127 + 127);
+        data[where+1] = (int)(normal[1] * 127 + 127);
+        data[where+2] = (int)(normal[2] * 127 + 127);
+      } else {
+        data[where+0] = 0;
+        data[where+1] = 0;
+        data[where+2] = 0;
+      }
+    }
+  }
+
+
+  return pixels;
+}
+
 int main(void)
 {
   int width = 800, height = 600;
@@ -152,8 +227,6 @@ int main(void)
   vec3 up = { 0.0, 1.0, 0.0 };
 
   orbit_camera_init(eye, center, up);
-
-
 
   // TODO: handle resize
 
@@ -201,17 +274,17 @@ int main(void)
       orbit_camera_rotate(0, 0, 0, -.1);
     }
 
-
-
+    glfwGetFramebufferSize(window, &width, &height);
     double now = glfwGetTime();
     if (now - start > 1) {
-      printf("fps: %i (%f Mrays/s)\n", fps, pixels/1000000.0f);
+      unsigned long long total_rays = (fps * width * height);
+      printf("fps: %i (%f Mrays/s)@%ix%i\n", fps, total_rays/1000000.0, width, height);
       start = now;
       fps = 0;
       pixels = 0;
     }
     fps++;
-    glfwGetFramebufferSize(window, &width, &height);
+
 
     orbit_camera_view(view);
     mat4_get_eye(ro, view);
@@ -226,9 +299,6 @@ int main(void)
     vec3 t0 = {0, 0, 0}, tx = {1, 0, 0}, ty = {0, 1, 0};
     vec4 viewport = { 0, 0, width, height };
 
-    ray3 ray;
-    double t = 0;
-
     orbit_camera_unproject(rda, t0, viewport, m4inverted);
     orbit_camera_unproject(rdb, tx, viewport, m4inverted);
     orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
@@ -236,40 +306,49 @@ int main(void)
     vec3_sub(dcol, planeYPosition, rda);
     vec3_sub(drow, rdb, rda);
 
-    vec3 normal;
-    double x, y;
-    for (y=0; y<height; ++y) {
-      vec3_add(planeYPosition, planeYPosition, dcol);
-      vec3_copy(planeXPosition, planeYPosition);
+    int threads = 4;
+    thrd_t th[threads];
+    screen_area areas[threads];
+    int count[threads];
+    int x = 0;
+    int y = 0;
+    int bw = (width/threads)/2;
+    int bh = (height/threads);
+    for (int i=0; i<threads; i++) {
 
-      for (x=0; x<width; ++x) {
-        pixels++;
-        vec3_add(planeXPosition, planeXPosition, drow);
+      vec3_copy(areas[i].dcol, dcol);
+      vec3_copy(areas[i].drow, drow);
+      vec3_copy(areas[i].pos, planeYPosition);
+      vec3_copy(areas[i].ro, ro);
+      areas[i].x = 0;
+      areas[i].y = i*bh;
+      areas[i].width = width;//areas[i].x + (int)(bw);
+      areas[i].height = areas[i].y + (int)(bh);
+      areas[i].stride = stride;
+      areas[i].data = data;
 
-        vec3_sub(rd, planeXPosition, ro);
-
-        unsigned long where = y * width * stride + x * stride;
-        uint8_t isect;
-
-        ray_update(&ray, rd);
-        isect = ray_isect(&ray, ro, rd, bounds);
-        if (isect) {
-       // vec3_norm(rd, rd);
-          t = ray_aabb_lerp(&ray, ro, bounds, normal);
+      areas[i].bounds[0][0] = bounds[0][0];
+      areas[i].bounds[0][1] = bounds[0][1];
+      areas[i].bounds[0][2] = bounds[0][2];
+      areas[i].bounds[1][0] = bounds[1][0];
+      areas[i].bounds[1][1] = bounds[1][1];
+      areas[i].bounds[1][2] = bounds[1][2];
 
 
-          data[where+0] = (int)(normal[0] * 127 + 127);
-          data[where+1] = (int)(normal[1] * 127 + 127);
-          data[where+2] = (int)(normal[2] * 127 + 127);
-        } else {
-          data[where+0] = 0;
-          data[where+1] = 0;
-          data[where+2] = 0;
-        }
+
+      thrd_create(&th[i], render_screen_area, &areas[i]);
+
+      x++;
+      if (x*bw >= width) {
+        x = 0;
+        y++;
       }
     }
 
-    // printf("hits: %u; total: %u\n", hits, width*height);
+    for (int i=0; i<threads; i++) {
+      thrd_join(th[i], &count[i]);
+      pixels+=count[i];
+    }
 
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
