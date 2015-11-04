@@ -170,9 +170,6 @@ int render_screen_area(void *args) {
       continue;
     }
     for (x=0; x<width; ++x) {
-      if (x < c->x) {
-        continue;
-      }
       ++pixels;
       vec3_add(planeXPosition, planeXPosition, drow);
       vec3_sub(rd, planeXPosition, ro);
@@ -184,7 +181,6 @@ int render_screen_area(void *args) {
       isect = ray_isect(&ray, ro, rd, c->bounds);
 
       if (isect) {
-     // vec3_norm(rd, rd);
         t = ray_aabb_lerp(&ray, ro, c->bounds, normal);
 
         data[where+0] = (int)(normal[0] * 127 + 127);
@@ -334,15 +330,7 @@ int main(void)
       areas[i].bounds[1][1] = bounds[1][1];
       areas[i].bounds[1][2] = bounds[1][2];
 
-
-
       thrd_create(&th[i], render_screen_area, &areas[i]);
-
-      x++;
-      if (x*bw >= width) {
-        x = 0;
-        y++;
-      }
     }
 
     for (int i=0; i<threads; i++) {
