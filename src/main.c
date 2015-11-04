@@ -156,19 +156,18 @@ int render_screen_area(void *args) {
   vec3_copy(planeYPosition, c->pos);
   vec3 planeXPosition;
 
-  vec3 dcol, drow, ro, rd, normal;
+  vec3 dcol, drow, ro, rd, normal, scratch;
   vec3_copy(dcol, c->dcol);
   vec3_copy(drow, c->drow);
   vec3_copy(ro, c->ro);
   uint8_t *data = c->data;
 
+  vec3_scale(scratch, dcol, c->y);
+  vec3_add(planeYPosition, scratch, c->pos);
+
   int x, y;
-  for (y=0; y<height; ++y) {
-    vec3_add(planeYPosition, planeYPosition, dcol);
+  for (y=c->y; y<height; ++y) {
     vec3_copy(planeXPosition, planeYPosition);
-    if (y < c->y) {
-      continue;
-    }
     for (x=0; x<width; ++x) {
       ++pixels;
       vec3_add(planeXPosition, planeXPosition, drow);
@@ -192,6 +191,7 @@ int render_screen_area(void *args) {
         data[where+2] = 0;
       }
     }
+    vec3_add(planeYPosition, planeYPosition, dcol);
   }
 
 
