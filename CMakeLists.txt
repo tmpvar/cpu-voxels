@@ -17,11 +17,13 @@ set(GLFW_BUILD_EXAMPLES OFF)
 add_subdirectory(deps/glfw)
 include_directories(deps/glfw/include deps/glfw/deps)
 
+# configure thpool
+include_directories(deps/thpool)
 
 add_executable(
     cpuvoxels
     src/main.c
-    deps/glfw/deps/tinycthread.c
+    deps/thpool/thpool.c
     ${GLFW_LIBRARIES}
 )
 
