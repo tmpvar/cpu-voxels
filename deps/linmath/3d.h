@@ -62,8 +62,12 @@ static inline vec3 vec3_create(const float x, const float y, const float z) {
   return _mm_setr_ps(x, y, z, 0.0f);
 }
 
+static inline vec3 vec3f(const float x) {
+  return _mm_set1_ps(x);
+}
+
+
 static inline float vec3_len(vec3 const v) {
-  // _mm_dp_ps would be optimal here
   return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v, v, 0x71)));
 }
 
@@ -113,10 +117,10 @@ static inline vec3 vec3_reciprocal(vec3 const v) {
 }
 
 static inline vec3 vec3_negate(vec3 const v) {
-  return vec3_create(-v[0], -v[1], -v[1]);
+  return -v;
 }
 
-static inline vec3 vec3_norm(vec3 const v) {
+static  vec3 vec3_norm(vec3 const v) {
   float len = vec3_len(v);
   if (len < 0.000000001) {
     return vec3_create(0, 0, 0);
@@ -594,37 +598,5 @@ static inline void mat4_translate(mat4 m, vec3 vec) {
   m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
   m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
 }
-
-// static inline void quat_from_mat4(quat q, mat4 M)
-// {
-//   float r=0.f;
-//   int i;
-
-//   int perm[] = { 0, 1, 2, 0, 1 };
-//   int *p = perm;
-
-//   for(i = 0; i<3; i++) {
-//     float m = M[i][i];
-//     if( m < r )
-//       continue;
-//     m = r;
-//     p = &perm[i];
-//   }
-
-//   r = sqrtf(1.f + M[p[0]][p[0]] - M[p[1]][p[1]] - M[p[2]][p[2]] );
-
-//   if(r < 1e-6) {
-//     q[0] = 1.f;
-//     q[1] = q[2] = q[3] = 0.f;
-//     return;
-//   }
-
-//   q[0] = r/2.f;
-//   q[1] = (M[p[0]][p[1]] - M[p[1]][p[0]])/(2.f*r);
-//   q[2] = (M[p[2]][p[0]] - M[p[0]][p[2]])/(2.f*r);
-//   q[3] = (M[p[2]][p[1]] - M[p[1]][p[2]])/(2.f*r);
-// }
-
-
 
 #endif

@@ -2,6 +2,7 @@
 #define __RAY__
 
 #include <3d.h>
+#include <immintrin.h>
 
 /******************************************************************************
 
@@ -53,12 +54,16 @@ typedef struct ray_t
 {
   //common variables
   vec3 invdir;
-
+  vec3 origin;
   // ray slope
   int classification;
-  float ibyj, jbyi, kbyj, jbyk, ibyk, kbyi; //slope
-  float c_xy, c_xz, c_yx, c_yz, c_zx, c_zy;
 } ray3;
+
+typedef struct ray_packet_t {
+  // stored as [0]=x, [1]=y, [2]=z
+  vec3 invdir[4];
+  vec3 origin[3];
+} ray_packet3;
 
 static int ray_classify(const vec3 rd) {
   // sign
@@ -81,7 +86,8 @@ static int ray_classify(const vec3 rd) {
           (k&1);
 }
 
-static inline void ray_update(ray3 *r, const vec3 rd) {
+static inline void ray_update(ray3 *r, const vec3 ro, const vec3 rd) {
+  r->origin = ro;
   r->invdir = vec3_reciprocal(rd);
   r->classification = ray_classify(rd);
 }

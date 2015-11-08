@@ -9,7 +9,7 @@
 #include "ray.h"
 #include "ray-aabb.h"
 
-#define TOTAL_THREADS 1
+#define TOTAL_THREADS 4
 
 struct {
   uint8_t down;
@@ -162,33 +162,42 @@ void render_screen_area(void *args) {
   drow = c->drow;
   ro = c->ro;
   uint8_t *data = c->data;
-
-
-  vec3 planeYPosition = dcol * vec3_create(c->y, c->y, c->y) + c->pos;
-
+  ray_packet3 packet;
+  packet.origin[0] = vec3f(ro[0]);
+  packet.origin[1] = vec3f(ro[1]);
+  packet.origin[2] = vec3f(ro[2]);
+  vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
+  vec3 invdir[4];
+  int result;
   int x, y;
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
-    for (x=0; x<width; ++x) {
-      planeXPosition = planeXPosition + drow;
-      rd = planeXPosition - ro;
+    for (x=0; x<width; x+=4) {
+      for (int i=0; i<4; i++) {
+        planeXPosition = planeXPosition + drow;// * vec3_create(x, x, x);
+        rd = planeXPosition - ro;
+        invdir[i] = vec3_reciprocal(rd);
+        packet.invdir[0][i] = invdir[i][0];
+        packet.invdir[1][i] = invdir[i][1];
+        packet.invdir[2][i] = invdir[i][2];
+      }
 
-      unsigned long where = y * width * stride + x * stride;
-      uint8_t isect;
+      result = ray_isect_packet(packet, c->bounds);
+      for (int j=0; j<4; j++) {
+        unsigned long where = y * width * stride + (x + j) * stride;
 
-      ray_update(&ray, rd);
-      isect = ray_isect(&ray, ro, rd, c->bounds);
+        if (result & (1<<j)) {
 
-      if (isect) {
-        normal = ray_aabb_lerp(&ray, ro, c->bounds, &t);
+          normal = ray_aabb_lerp(ro, invdir[j], ray_classify(invdir[j]), c->bounds, &t);
 
-        data[where+0] = (int)(normal[0] * 127 + 127);
-        data[where+1] = (int)(normal[1] * 127 + 127);
-        data[where+2] = (int)(normal[2] * 127 + 127);
-      } else {
-        data[where+0] = 0;
-        data[where+1] = 0;
-        data[where+2] = 0;
+          data[where+0] = (int)(normal[0] * 127 + 127);
+          data[where+1] = (int)(normal[1] * 127 + 127);
+          data[where+2] = (int)(normal[2] * 127 + 127);
+        } else {
+          data[where+0] = 0;
+          data[where+1] = 0;
+          data[where+2] = 0;
+        }
       }
     }
     planeYPosition += dcol;
@@ -216,7 +225,7 @@ int main(void)
   glfwSetKeyCallback(window, key_callback);
 
   vec3 eye = vec3_create(0.0, 0.0, -1);
-  vec3 center =  vec3_create(0.0, 0.0, 0.0 );
+  vec3 center = vec3_create(0.0, 0.0, 0.0 );
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
   orbit_camera_init(eye, center, up);
@@ -251,7 +260,7 @@ int main(void)
   glGenTextures(1, texture);
   float start = glfwGetTime();
   int fps = 0;
-//  threadpool thpool = thpool_init(TOTAL_THREADS);
+  threadpool thpool = thpool_init(TOTAL_THREADS);
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
@@ -302,10 +311,10 @@ int main(void)
     // int bh = (height/TOTAL_THREADS);
     // for (int i=0; i<TOTAL_THREADS; i++) {
 
-    //   vec3_copy(areas[i].dcol, dcol);
-    //   vec3_copy(areas[i].drow, drow);
-    //   vec3_copy(areas[i].pos, planeYPosition);
-    //   vec3_copy(areas[i].ro, ro);
+    //   areas[i].dcol = dcol;
+    //   areas[i].drow = drow;
+    //   areas[i].pos = planeYPosition;
+    //   areas[i].ro = ro;
     //   areas[i].x = 0;
     //   areas[i].y = i*bh;
     //   areas[i].width = width;//areas[i].x + (int)(bw);
