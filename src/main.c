@@ -180,7 +180,7 @@ void render_screen_area(void *args) {
       isect = ray_isect(&ray, ro, rd, c->bounds);
 
       if (isect) {
-        // normal = ray_aabb_lerp(&ray, ro, c->bounds, &t);
+        normal = ray_aabb_lerp(&ray, ro, c->bounds, &t);
 
         data[where+0] = (int)(normal[0] * 127 + 127);
         data[where+1] = (int)(normal[1] * 127 + 127);

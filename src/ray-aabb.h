@@ -41,9 +41,10 @@ uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
   return tmax >= max(0.0, tmin);
 }
 
-static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
+static vec3 ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, float *t) {
 
   float a = 0, b = 0, c = 0;
+  vec3 norm = vec3_create(0, 0, 0);
 
   switch (r->classification) {
     case MMM:
@@ -55,7 +56,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ? 1 : 0;
       norm[2] = (c >= a && c >= b) ? 1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case MMP:
@@ -67,7 +68,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ?  1 : 0;
       norm[2] = (c >= a && c >= b) ? -1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case MPM:
@@ -79,7 +80,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ? -1 : 0;
       norm[2] = (c >= a && c >= b) ?  1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case MPP:
@@ -91,7 +92,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ? -1 : 0;
       norm[2] = (c >= a && c >= b) ? -1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case PMM:
@@ -103,7 +104,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ?  1 : 0;
       norm[2] = (c >= a && c >= b) ?  1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case PMP:
@@ -115,7 +116,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ?  1 : 0;
       norm[2] = (c >= a && c >= b) ? -1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case PPM:
@@ -127,7 +128,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ? -1 : 0;
       norm[2] = (c >= a && c >= b) ?  1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case PPP:
@@ -139,7 +140,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= c && b >= a) ? -1 : 0;
       norm[2] = (c >= a && c >= b) ? -1 : 0;
 
-      return max(max(a, b), c);
+      *t = max(max(a, b), c);
     break;
 
     case OMM:
@@ -150,7 +151,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (a >= b) ? 1 : 0;
       norm[2] = (b >= a) ? 1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case OMP:
@@ -158,7 +159,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (a >= b) ?  1 : 0;
       norm[2] = (b >= a) ? -1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case OPM:
@@ -169,7 +170,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (a >= b) ? -1 : 0;
       norm[2] = (b >= a) ?  1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case OPP:
@@ -180,7 +181,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (a >= b) ? -1 : 0;
       norm[2] = (b >= a) ? -1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case MOM:
@@ -191,7 +192,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = 0;
       norm[2] = (b >= a) ? 1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case MOP:
@@ -202,7 +203,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = 0;
       norm[2] = (b >= a) ? -1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case POM:
@@ -213,7 +214,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = 0;
       norm[2] = (b >= a) ?  1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case POP:
@@ -224,7 +225,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = 0;
       norm[2] = (b >= a) ? -1 : 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case MMO:
@@ -235,7 +236,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= a) ? 1 : 0;
       norm[2] = 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case MPO:
@@ -246,7 +247,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= a) ? -1 : 0;
       norm[2] = 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case PMO:
@@ -257,7 +258,7 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= a) ?  1 : 0;
       norm[2] = 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case PPO:
@@ -268,50 +269,51 @@ static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
       norm[1] = (b >= a) ? -1 : 0;
       norm[2] = 0;
 
-      return max(a, b);
+      *t = max(a, b);
     break;
 
     case MOO:
       norm[0] = 1;
       norm[1] = norm[2] = 0;
-      return (box[1][0] - ro[0]) * r->ii;
+      *t = (box[1][0] - ro[0]) * r->ii;
     break;
 
     case POO:
       norm[0] = -1;
       norm[1] = norm[2] = 0;
-      return (box[0][0] - ro[0]) * r->ii;
+      *t = (box[0][0] - ro[0]) * r->ii;
     break;
 
     case OMO:
       norm[0] = 0;
       norm[1] = 1;
       norm[2] = 0;
-      return (box[1][1] - ro[1]) * r->ij;
+      *t = (box[1][1] - ro[1]) * r->ij;
     break;
 
     case OPO:
       norm[0] = 0;
       norm[1] = -1;
       norm[2] = 0;
-      return (box[0][1] - ro[1]) * r->ij;
+      *t = (box[0][1] - ro[1]) * r->ij;
     break;
 
     case OOM:
       norm[0] = norm[1] = 0;
       norm[2] = 1;
-      return (box[1][2] - ro[2]) * r->ik;
+      *t = (box[1][2] - ro[2]) * r->ik;
     break;
 
     case OOP:
       norm[0] = norm[1] = 0;
       norm[2] = -1;
-      return (box[0][2] - ro[2]) * r->ik;
+      *t = (box[0][2] - ro[2]) * r->ik;
     break;
   }
 
-  norm[0] = norm[1] = norm[2] = 0;
-  return -1;
+
+  *t = -1;
+  return norm;
 }
 
 #endif
