@@ -20,20 +20,20 @@
 #define max(x, y) (x > y ? x : y)
 
 uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
-  double tx1 = (b[0][0] - ro[0])*r->invdir[0];
-  double tx2 = (b[1][0] - ro[0])*r->invdir[0];
+  float tx1 = (b[0][0] - ro[0])*r->invdir[0];
+  float tx2 = (b[1][0] - ro[0])*r->invdir[0];
 
   float tmin = min(tx1, tx2);
   float tmax = max(tx1, tx2);
 
-  double ty1 = (b[0][1] - ro[1])*r->invdir[1];
-  double ty2 = (b[1][1] - ro[1])*r->invdir[1];
+  float ty1 = (b[0][1] - ro[1])*r->invdir[1];
+  float ty2 = (b[1][1] - ro[1])*r->invdir[1];
 
   tmin = max(tmin, min(ty1, ty2));
   tmax = min(tmax, max(ty1, ty2));
 
-  double tz1 = (b[0][2] - ro[2])*r->invdir[2];
-  double tz2 = (b[1][2] - ro[2])*r->invdir[2];
+  float tz1 = (b[0][2] - ro[2])*r->invdir[2];
+  float tz2 = (b[1][2] - ro[2])*r->invdir[2];
 
   tmin = max(tmin, min(tz1, tz2));
   tmax = min(tmax, max(tz1, tz2));
