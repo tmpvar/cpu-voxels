@@ -5,6 +5,7 @@
 #include <math.h>
 #include <xmmintrin.h>
 #include <smmintrin.h>
+#include <immintrin.h>
 
 typedef float mat3[9];
 typedef float mat4[16];
