@@ -20,20 +20,20 @@
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
 uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
-  double tx1 = (b[0][0] - ro[0])*r->ii;
-  double tx2 = (b[1][0] - ro[0])*r->ii;
+  float tx1 = (b[0][0] - ro[0])*r->ii;
+  float tx2 = (b[1][0] - ro[0])*r->ii;
 
-  double tmin = min(tx1, tx2);
-  double tmax = max(tx1, tx2);
+  float tmin = min(tx1, tx2);
+  float tmax = max(tx1, tx2);
 
-  double ty1 = (b[0][1] - ro[1])*r->ij;
-  double ty2 = (b[1][1] - ro[1])*r->ij;
+  float ty1 = (b[0][1] - ro[1])*r->ij;
+  float ty2 = (b[1][1] - ro[1])*r->ij;
 
   tmin = max(tmin, min(ty1, ty2));
   tmax = min(tmax, max(ty1, ty2));
 
-  double tz1 = (b[0][2] - ro[2])*r->ik;
-  double tz2 = (b[1][2] - ro[2])*r->ik;
+  float tz1 = (b[0][2] - ro[2])*r->ik;
+  float tz2 = (b[1][2] - ro[2])*r->ik;
 
   tmin = max(tmin, min(tz1, tz2));
   tmax = min(tmax, max(tz1, tz2));
@@ -41,9 +41,9 @@ uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
   return tmax >= max(0.0, tmin);
 }
 
-static double ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
+static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
 
-  double a, b, c;
+  float a, b, c;
 
   switch (r->classification) {
     case MMM:

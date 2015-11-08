@@ -13,13 +13,13 @@
 
 struct {
   uint8_t down;
-  double x, y;
+  float x, y;
 } mouse;
 
 struct {
   quat rotation;
   vec3 center, v3scratch;
-  double distance;
+  float distance;
   mat4 scratch0, scratch1;
 } orbit_camera;
 
@@ -36,7 +36,7 @@ static void orbit_camera_init(const vec3 eye, const vec3 center, const vec3 up) 
   orbit_camera_lookat(eye, center, up);
 }
 
-static void orbit_camera_rotate(const double sx, const double sy, const double ex, const double ey) {
+static void orbit_camera_rotate(const float sx, const float sy, const float ex, const float ey) {
   const vec3 vs = { sx, sy, 0.0f };
   const vec3 ve = { ex, ey, 0.0f };
   quat s, e;
@@ -57,14 +57,14 @@ static void orbit_camera_rotate(const double sx, const double sy, const double e
 }
 
 static void orbit_camera_unproject(vec3 r, const vec3 vec, const vec4 viewport, const mat4 inv) {
-  double viewX = viewport[0];
-  double viewY = viewport[1];
-  double viewWidth = viewport[2];
-  double viewHeight = viewport[3];
+  float viewX = viewport[0];
+  float viewY = viewport[1];
+  float viewWidth = viewport[2];
+  float viewHeight = viewport[3];
 
-  double x = vec[0];
-  double y = vec[1];
-  double z = vec[2];
+  float x = vec[0];
+  float y = vec[1];
+  float z = vec[2];
 
   x = x - viewX;
   y = viewHeight - y - 1;
@@ -148,7 +148,7 @@ typedef struct {
 
 void render_screen_area(void *args) {
   ray3 ray;
-  double t = 0;
+  float t = 0;
 
   screen_area *c = (screen_area *)args;
   int width = c->width;
@@ -241,7 +241,7 @@ int main(void)
   mat4_perspective(
     projection,
     M_PI/4.0,
-    (double)width/(double)height,
+    (float)width/(float)height,
     0.1,
     1000.0
   );
@@ -250,7 +250,7 @@ int main(void)
   screen_area areas[TOTAL_THREADS];
 
   glGenTextures(1, texture);
-  double start = glfwGetTime();
+  float start = glfwGetTime();
   int fps = 0;
   unsigned long pixels = 0;
   threadpool thpool = thpool_init(TOTAL_THREADS);
@@ -272,7 +272,7 @@ int main(void)
     }
 
     glfwGetFramebufferSize(window, &width, &height);
-    double now = glfwGetTime();
+    float now = glfwGetTime();
     if (now - start > 1) {
       unsigned long long total_rays = (fps * width * height);
       printf("fps: %i (%f Mrays/s)@%ix%i\n", fps, total_rays/1000000.0, width, height);

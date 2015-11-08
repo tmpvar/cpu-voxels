@@ -52,14 +52,14 @@ enum CLASSIFICATION {
 typedef struct ray_t
 {
   //common variables
-  double x, y, z;    // ray origin
-  double i, j, k;    // ray direction
-  double ii, ij, ik; // inverses of direction components
+  float x, y, z;    // ray origin
+  float i, j, k;    // ray direction
+  float ii, ij, ik; // inverses of direction components
 
   // ray slope
   int classification;
-  double ibyj, jbyi, kbyj, jbyk, ibyk, kbyi; //slope
-  double c_xy, c_xz, c_yx, c_yz, c_zx, c_zy;
+  float ibyj, jbyi, kbyj, jbyk, ibyk, kbyi; //slope
+  float c_xy, c_xz, c_yx, c_yz, c_zx, c_zy;
 } ray3;
 
 static int ray_classify(const vec3 rd) {
