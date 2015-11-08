@@ -3,14 +3,14 @@
 
 #include <math.h>
 
-typedef double mat3[9];
-typedef double mat4[16];
-typedef double quat[4];
-typedef double vec3[3];
+typedef float mat3[9];
+typedef float mat4[16];
+typedef float quat[4];
+typedef float vec3[3];
 
 
 #define LINMATH_H_DEFINE_VEC(n) \
-typedef double vec##n[n]; \
+typedef float vec##n[n]; \
 static inline void vec##n##_add(vec##n r, vec##n const a, vec##n const b) \
 { \
   int i; \
@@ -23,25 +23,25 @@ static inline void vec##n##_sub(vec##n r, vec##n const a, vec##n const b) \
   for(i=0; i<n; ++i) \
   r[i] = a[i] - b[i]; \
 } \
-static inline void vec##n##_scale(vec##n r, vec##n const v, double const s) \
+static inline void vec##n##_scale(vec##n r, vec##n const v, float const s) \
 { \
   int i; \
   for(i=0; i<n; ++i) \
   r[i] = v[i] * s; \
 } \
-static inline double vec##n##_mul_inner(vec##n const a, vec##n const b) \
+static inline float vec##n##_mul_inner(vec##n const a, vec##n const b) \
 { \
-  double p = 0.; \
+  float p = 0.; \
   int i; \
   for(i=0; i<n; ++i) \
   p += b[i]*a[i]; \
   return p; \
 } \
-static inline double vec##n##_len(vec##n const v) \
+static inline float vec##n##_len(vec##n const v) \
 { \
   return sqrtf(vec##n##_mul_inner(v,v)); \
 } \
-static inline double vec##n##_distance(vec##n const a, vec##n const b) \
+static inline float vec##n##_distance(vec##n const a, vec##n const b) \
 { \
   vec##n scratch; \
   vec##n##_sub(scratch, a, b); \
@@ -70,17 +70,17 @@ static inline void vec3_sub(vec3 r, vec3 const a, vec3 const b) {
   r[2] = a[2] - b[2];
 }
 
-static inline void vec3_scale(vec3 r, vec3 const v, double const s) {
+static inline void vec3_scale(vec3 r, vec3 const v, float const s) {
   r[0] = v[0] * s;
   r[1] = v[1] * s;
   r[2] = v[2] * s;
 }
 
-static inline double vec3_len(vec3 const v) {
+static inline float vec3_len(vec3 const v) {
   return sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
-static inline double vec3_distance(vec3 const a, vec3 const b) {
+static inline float vec3_distance(vec3 const a, vec3 const b) {
   vec3 scratch;
   vec3_sub(scratch, a, b);
   return vec3_len(scratch);
@@ -100,11 +100,11 @@ static inline void vec3_mul_cross(vec3 r, const vec3 a, const vec3 b)
 }
 
 static inline void vec3_transform(vec3 r, const vec3 a, const mat4 m) {
-  double x = a[0];
-  double y = a[1];
-  double z = a[2];
+  float x = a[0];
+  float y = a[1];
+  float z = a[2];
 
-  double w = m[3] * x + m[7] * y + m[11] * z + m[15];
+  float w = m[3] * x + m[7] * y + m[11] * z + m[15];
   if (w == 0.0) {
     w = 1.0;
   }
@@ -121,17 +121,17 @@ static inline void vec3_negate(vec3 r, vec3 const v) {
 }
 
 static inline void vec3_norm(vec3 r, vec3 const v) {
-  double len = vec3_len(v);
+  float len = vec3_len(v);
   if (len < 0.000000001) {
     return;
   }
-  double k = 1.0 / len;
+  float k = 1.0 / len;
   vec3_scale(r, v, k);
 }
 
 static inline void vec4_norm(vec4 r, vec4 const v) {
-  double len = vec4_len(v);
-  double k = 1.0 / len;
+  float len = vec4_len(v);
+  float k = 1.0 / len;
   vec4_scale(r, v, k);
 }
 
@@ -154,7 +154,7 @@ static inline void vec4_mul_cross(vec4 r, const vec4 a, const vec4 b)
 
 static inline void vec4_reflect(vec4 r, vec4 v, vec4 n)
 {
-  const double p  = 2.f*vec4_mul_inner(v, n);
+  const float p  = 2.f*vec4_mul_inner(v, n);
   int i;
   for(i=0;i<4;++i)
   r[i] = v[i] - p*n[i];
@@ -173,10 +173,10 @@ static inline void mat3_from_mat4(mat3 m, const mat4 a) {
 }
 
 static inline void mat4_set(mat4 m,
-  double a11, double a21, double a31, double a41,
-  double a12, double a22, double a32, double a42,
-  double a13, double a23, double a33, double a43,
-  double a14, double a24, double a34, double a44
+  float a11, float a21, float a31, float a41,
+  float a12, float a22, float a32, float a42,
+  float a13, float a23, float a33, float a43,
+  float a14, float a24, float a34, float a44
 ) {
   m[0]  = a11;
   m[1]  = a21;
@@ -197,26 +197,26 @@ static inline void mat4_set(mat4 m,
 }
 
 static inline uint8_t mat4_invert(mat4 r, const mat4 a) {
-  const double a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+  const float a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-  const double b00 = a00 * a11 - a01 * a10;
-  const double b01 = a00 * a12 - a02 * a10;
-  const double b02 = a00 * a13 - a03 * a10;
-  const double b03 = a01 * a12 - a02 * a11;
-  const double b04 = a01 * a13 - a03 * a11;
-  const double b05 = a02 * a13 - a03 * a12;
-  const double b06 = a20 * a31 - a21 * a30;
-  const double b07 = a20 * a32 - a22 * a30;
-  const double b08 = a20 * a33 - a23 * a30;
-  const double b09 = a21 * a32 - a22 * a31;
-  const double b10 = a21 * a33 - a23 * a31;
-  const double b11 = a22 * a33 - a23 * a32;
+  const float b00 = a00 * a11 - a01 * a10;
+  const float b01 = a00 * a12 - a02 * a10;
+  const float b02 = a00 * a13 - a03 * a10;
+  const float b03 = a01 * a12 - a02 * a11;
+  const float b04 = a01 * a13 - a03 * a11;
+  const float b05 = a02 * a13 - a03 * a12;
+  const float b06 = a20 * a31 - a21 * a30;
+  const float b07 = a20 * a32 - a22 * a30;
+  const float b08 = a20 * a33 - a23 * a30;
+  const float b09 = a21 * a32 - a22 * a31;
+  const float b10 = a21 * a33 - a23 * a31;
+  const float b11 = a22 * a33 - a23 * a32;
 
   // Calculate the determinant
-  double det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+  float det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
   if (!det) {
     return 0;
@@ -254,13 +254,13 @@ static inline void mat4_get_eye(vec3 v, const mat4 m) {
 }
 
 static inline void mat4_mul(mat4 r, mat4 a, mat4 b) {
-  const double a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+  const float a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
   // Cache only the current line of the second matrix
-  double b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+  float b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
   r[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
   r[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
   r[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
@@ -286,13 +286,13 @@ static inline void mat4_mul(mat4 r, mat4 a, mat4 b) {
 
 }
 
-static inline void mat4_perspective(mat4 m, const double fovy, const double aspect, const double near, const double far) {
-  const double f = 1.0 / tanf(fovy / 2);
-  const double nf = 1 / (near - far);
-  const double a = f / aspect;
+static inline void mat4_perspective(mat4 m, const float fovy, const float aspect, const float near, const float far) {
+  const float f = 1.0 / tanf(fovy / 2);
+  const float nf = 1 / (near - far);
+  const float a = f / aspect;
 
-  const double b = (far + near) * nf;
-  const double c = (2.0 * far * near) * nf;
+  const float b = (far + near) * nf;
+  const float c = (2.0 * far * near) * nf;
 
   mat4_set(m,
     a, 0, 0,  0,
@@ -321,7 +321,7 @@ static inline void mat4_identity(mat4 m) {
 }
 
 static inline void mat4_from_rotation_translation(mat4 m, const quat q, const vec3 v) {
-  const double x = q[0], y = q[1], z = q[2], w = q[3],
+  const float x = q[0], y = q[1], z = q[2], w = q[3],
       x2 = x + x,
       y2 = y + y,
       z2 = z + z,
@@ -357,16 +357,16 @@ static inline void mat4_from_rotation_translation(mat4 m, const quat q, const ve
 }
 
 static inline void mat4_look_at(mat4 m, const vec3 eye, const vec3 center, const vec3 up) {
-  double x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
-  const double eyex = eye[0];
-  const double eyey = eye[1];
-  const double eyez = eye[2];
-  const double upx = up[0];
-  const double upy = up[1];
-  const double upz = up[2];
-  const double centerx = center[0];
-  const double centery = center[1];
-  const double centerz = center[2];
+  float x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+  const float eyex = eye[0];
+  const float eyey = eye[1];
+  const float eyez = eye[2];
+  const float upx = up[0];
+  const float upy = up[1];
+  const float upz = up[2];
+  const float centerx = center[0];
+  const float centery = center[1];
+  const float centerz = center[2];
 
   if (eyex == centerx && eyey == centery && eyez == centerz) {
     return mat4_identity(m);
@@ -446,7 +446,7 @@ static inline void quat_sub(quat r, quat a, quat b)
 }
 static inline void quat_mul(quat r, const quat a, const quat b)
 {
-  const double ax = a[0], ay = a[1], az = a[2], aw = a[3],
+  const float ax = a[0], ay = a[1], az = a[2], aw = a[3],
       bx = b[0], by = b[1], bz = b[2], bw = b[3];
 
   r[0] = ax * bw + aw * bx + ay * bz - az * by;
@@ -454,14 +454,14 @@ static inline void quat_mul(quat r, const quat a, const quat b)
   r[2] = az * bw + aw * bz + ax * by - ay * bx;
   r[3] = aw * bw - ax * bx - ay * by - az * bz;
 }
-static inline void quat_scale(quat r, const quat v, const double s)
+static inline void quat_scale(quat r, const quat v, const float s)
 {
   int i;
   for(i=0; i<4; ++i)
   r[i] = v[i] * s;
 }
-static inline double quat_inner_product(quat a, quat b) {
-  double p = 0.f;
+static inline float quat_inner_product(quat a, quat b) {
+  float p = 0.f;
   int i;
   for(i=0; i<4; ++i)
   p += b[i]*a[i];
@@ -475,7 +475,7 @@ static inline void quat_conj(quat r, const quat q) {
   r[3] =  q[3];
 }
 
-static inline void quat_rotate(quat r, const double angle, const vec3 axis) {
+static inline void quat_rotate(quat r, const float angle, const vec3 axis) {
   vec3 v;
   vec3_scale(v, axis, sinf(angle / 2));
   int i;
@@ -507,12 +507,12 @@ v' = v + q.w * t + cross(q.xyz, t)
 
 static inline void quat_invert(quat r, const quat a) {
 
-  double a0 = a[0];
-  double a1 = a[1];
-  double a2 = a[2];
-  double a3 = a[3];
-  double dot = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
-  double invDot = dot ? 1.0f / dot : 0.0f;
+  float a0 = a[0];
+  float a1 = a[1];
+  float a2 = a[2];
+  float a3 = a[3];
+  float dot = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+  float invDot = dot ? 1.0f / dot : 0.0f;
 
   // TODO: Would be faster to return [0,0,0,0] immediately if dot == 0
 
@@ -528,8 +528,8 @@ static inline void quat_from_mat4(quat q, const mat4 m4) {
 
    // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
   // article "Quaternion Calculus and Fast Animation".
-  double fTrace = m[0] + m[4] + m[8];
-  double fRoot;
+  float fTrace = m[0] + m[4] + m[8];
+  float fRoot;
 
   if ( fTrace > 0.0 ) {
     // |w| > 1/2, may as well choose w > 1/2
@@ -560,14 +560,14 @@ static inline void quat_from_mat4(quat q, const mat4 m4) {
 
 static inline void mat4_from_quat(mat4 m, quat q)
 {
-  double a = q[3];
-  double b = q[0];
-  double c = q[1];
-  double d = q[2];
-  double a2 = a*a;
-  double b2 = b*b;
-  double c2 = c*c;
-  double d2 = d*d;
+  float a = q[3];
+  float b = q[0];
+  float c = q[1];
+  float d = q[2];
+  float a2 = a*a;
+  float b2 = b*b;
+  float c2 = c*c;
+  float d2 = d*d;
 
   mat4_set(m,
     a2 + b2 - c2 - d2,
@@ -590,10 +590,10 @@ static inline void mat4_from_quat(mat4 m, quat q)
 }
 
 static inline void quat_from_vec3(quat q, const vec3 vec) {
-  double x = vec[0];
-  double y = vec[1];
-  double z = vec[2];
-  double s = x*x + y*y;
+  float x = vec[0];
+  float y = vec[1];
+  float z = vec[2];
+  float s = x*x + y*y;
   if(s > 1.0) {
     s = 1.0;
   }
@@ -609,7 +609,7 @@ static inline void quat_from_vec3(quat q, const vec3 vec) {
 }
 
 static inline void mat4_translate(mat4 m, vec3 vec) {
-  double x = vec[0], y = vec[1], z = vec[2];
+  float x = vec[0], y = vec[1], z = vec[2];
   m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
   m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
   m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
@@ -618,14 +618,14 @@ static inline void mat4_translate(mat4 m, vec3 vec) {
 
 // static inline void quat_from_mat4(quat q, mat4 M)
 // {
-//   double r=0.f;
+//   float r=0.f;
 //   int i;
 
 //   int perm[] = { 0, 1, 2, 0, 1 };
 //   int *p = perm;
 
 //   for(i = 0; i<3; i++) {
-//     double m = M[i][i];
+//     float m = M[i][i];
 //     if( m < r )
 //       continue;
 //     m = r;
