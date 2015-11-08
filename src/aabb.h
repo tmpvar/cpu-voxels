@@ -1,5 +1,5 @@
 #ifndef __AABB__
 #define __AABB__
-
- typedef float aabb[2][3];
+  #include <3d.h>
+  typedef vec3 aabb[2];
 #endif
