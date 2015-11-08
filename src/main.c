@@ -216,7 +216,7 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = { 0.0, 0.0, -10 };
+  vec3 eye = { 0.0, 0.0, -1 };
   vec3 center = { 0.0, 0.0, 0.0 };
   vec3 up = { 0.0, 1.0, 0.0 };
 
@@ -231,8 +231,8 @@ int main(void)
   uint8_t *data = malloc(total);
 
   aabb bounds = {
-    {-1, -1, -1},
-    { 1,  1,  1}
+    {-.1, -.1, -.1},
+    { .1,  .1,  .1}
   };
 
   vec3 ro, rd;
