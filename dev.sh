@@ -2,8 +2,8 @@
 
 while true; do
   clear
-  cmake .
-  make && out/bin/cpuvoxels
+  cmake ../
+  VERBOSE=1 make && ./vectest
 
   fswatch -1 src deps
 done

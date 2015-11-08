@@ -25,38 +25,32 @@ struct {
 
 static void orbit_camera_lookat(const vec3 eye, const vec3 center, const vec3 up) {
   mat4_look_at(orbit_camera.scratch0, eye, center, up);
-  quat_from_mat4(orbit_camera.rotation, orbit_camera.scratch0);
-  quat_norm(orbit_camera.rotation, orbit_camera.rotation);
-  vec3_copy(orbit_camera.center, center);
+  orbit_camera.rotation = quat_norm(quat_from_mat4(orbit_camera.scratch0));
+  orbit_camera.center = center;
   orbit_camera.distance = vec3_distance(eye, center);
 }
 
 static void orbit_camera_init(const vec3 eye, const vec3 center, const vec3 up) {
-  quat_identity(orbit_camera.rotation);
+  orbit_camera.rotation = quat_create(0.0f, 0.0f, 0.0f, 1.0f);
   orbit_camera_lookat(eye, center, up);
 }
 
 static void orbit_camera_rotate(const float sx, const float sy, const float ex, const float ey) {
-  const vec3 vs = { sx, sy, 0.0f };
-  const vec3 ve = { ex, ey, 0.0f };
-  quat s, e;
+  const vec3 vs = vec3_create(sx, sy, 0.0f);
+  const vec3 ve = vec3_create(ex, ey, 0.0f);
+  quat s = quat_from_vec3(vs);
+  quat e = quat_from_vec3(ve);
+  quat r = quat_mul(s, quat_invert(e));
 
-  quat_from_vec3(s, vs);
-  quat_from_vec3(e, ve);
-
-  quat_invert(e, e);
-  quat_mul(s, s, e);
-
-  if(vec4_len(s) < 1e-6) {
-    printf("MISS %f\n", vec4_len(s));
+  if(vec4_len(r) < 1e-6) {
+    printf("MISS %f\n", vec4_len(r));
     return;
   }
 
-  quat_mul(orbit_camera.rotation, orbit_camera.rotation, s);
-  quat_norm(orbit_camera.rotation, orbit_camera.rotation);
+  orbit_camera.rotation = quat_norm(quat_mul(orbit_camera.rotation, r));
 }
 
-static void orbit_camera_unproject(vec3 r, const vec3 vec, const vec4 viewport, const mat4 inv) {
+static vec3 orbit_camera_unproject(const vec3 vec, const vec4 viewport, const mat4 inv) {
   float viewX = viewport[0];
   float viewY = viewport[1];
   float viewWidth = viewport[2];
@@ -70,20 +64,21 @@ static void orbit_camera_unproject(vec3 r, const vec3 vec, const vec4 viewport, 
   y = viewHeight - y - 1;
   y = y - viewY;
 
-  r[0] = (2 * x) / viewWidth - 1;
-  r[1] = (2 * y) / viewHeight - 1;
-  r[2] = 2 * z - 1;
+  vec3 r = vec3_create(
+    (2 * x) / viewWidth - 1,
+    (2 * y) / viewHeight - 1,
+    2 * z - 1
+  );
 
-  vec3_transform(r, r, inv);
+  return vec3_transform(r, inv);
 }
 
-static void orbit_camera_view(const mat4 view) {
-  quat q;
-  vec3 s = { 0.0, 0.0, -orbit_camera.distance };
-  quat_conj(q, orbit_camera.rotation);
+static void orbit_camera_view(mat4 view) {
+  vec3 s = vec3_create(0.0, 0.0, -orbit_camera.distance);
+  quat q = quat_conj(orbit_camera.rotation);
   mat4_from_rotation_translation(view, q, s);
-  vec3_negate(orbit_camera.v3scratch, orbit_camera.center);
-  mat4_translate(view, orbit_camera.v3scratch);
+  vec3 neg = vec3_negate(orbit_camera.center);
+  mat4_translate(view, neg);
 }
 
 static void error_callback(int error, const char* description) {
@@ -154,45 +149,40 @@ void render_screen_area(void *args) {
   int width = c->width;
   int height = c->height;
   int stride = c->stride;
-  vec3 planeYPosition;
-  vec3_copy(planeYPosition, c->pos);
+  vec3 planeYPosition = vec3_copy(c->pos);
   vec3 planeXPosition;
 
-  vec3 dcol, drow, ro, rd, normal, scratch;
-  vec3_copy(dcol, c->dcol);
-  vec3_copy(drow, c->drow);
-  vec3_copy(ro, c->ro);
-  uint8_t *data = c->data;
+  vec3 rd, normal;
 
-  vec3_scale(scratch, dcol, c->y);
-  vec3_add(planeYPosition, scratch, c->pos);
+  uint8_t *data = c->data;
+  planeYPosition = vec3_scale(c->dcol, c->y) + c->pos;
 
   int x, y;
   for (y=c->y; y<height; ++y) {
-    vec3_copy(planeXPosition, planeYPosition);
+    planeXPosition = vec3_copy(planeYPosition);
     for (x=0; x<width; ++x) {
-      vec3_add(planeXPosition, planeXPosition, drow);
-      vec3_sub(rd, planeXPosition, ro);
+      planeXPosition = planeXPosition + c->drow;
+      rd = planeXPosition - c->ro;
 
       unsigned long where = y * width * stride + x * stride;
       uint8_t isect;
 
       ray_update(&ray, rd);
-      isect = ray_isect(&ray, ro, rd, c->bounds);
+      isect = ray_isect(&ray, c->ro, rd, c->bounds);
 
       if (isect) {
-        t = ray_aabb_lerp(&ray, ro, c->bounds, normal);
+        // t = ray_aabb_lerp(&ray, c->ro, c->bounds, normal);
 
-        data[where+0] = (int)(normal[0] * 127 + 127);
-        data[where+1] = (int)(normal[1] * 127 + 127);
-        data[where+2] = (int)(normal[2] * 127 + 127);
+        data[where+0] = 255;//(int)(normal[0] * 127 + 127);
+        data[where+1] = 255;//(int)(normal[1] * 127 + 127);
+        data[where+2] = 255;//(int)(normal[2] * 127 + 127);
       } else {
         data[where+0] = 0;
         data[where+1] = 0;
         data[where+2] = 0;
       }
     }
-    vec3_add(planeYPosition, planeYPosition, dcol);
+    planeYPosition += c->dcol;
   }
 }
 
@@ -216,9 +206,9 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = { 0.0, 0.0, -10 };
-  vec3 center = { 0.0, 0.0, 0.0 };
-  vec3 up = { 0.0, 1.0, 0.0 };
+  vec3 eye =    vec3_create(0.0f, 0.0f, -10.0f);
+  vec3 center = vec3_create(0.0f, 0.0f,  0.0f );
+  vec3 up =     vec3_create(0.0f, 1.0f,  0.0f );
 
   orbit_camera_init(eye, center, up);
 
@@ -231,8 +221,8 @@ int main(void)
   uint8_t *data = malloc(total);
 
   aabb bounds = {
-    {-1, -1, -1},
-    { 1,  1,  1}
+    vec3_create(-1, -1, -1),
+    vec3_create( 1,  1,  1)
   };
 
   vec3 ro, rd;
@@ -256,19 +246,19 @@ int main(void)
   threadpool thpool = thpool_init(TOTAL_THREADS);
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-      orbit_camera_rotate(0, 0, -.1, 0);
+      orbit_camera_rotate(0, 0, -.01, 0);
     }
 
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-      orbit_camera_rotate(0, 0, .1, 0);
+      orbit_camera_rotate(0, 0, .01, 0);
     }
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-      orbit_camera_rotate(0, 0, 0, .1);
+      orbit_camera_rotate(0, 0, 0, .01);
     }
 
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-      orbit_camera_rotate(0, 0, 0, -.1);
+      orbit_camera_rotate(0, 0, 0, -.01);
     }
 
     glfwGetFramebufferSize(window, &width, &height);
@@ -282,37 +272,36 @@ int main(void)
     }
     fps++;
 
-
     orbit_camera_view(view);
-    mat4_get_eye(ro, view);
-
+// printf("\n\n----------------\n");
+// mat4_print(view);
+    ro = mat4_get_eye(view);
+printf("camera distance %f ", vec3_distance(ro, orbit_camera.center));vec3_print(center);
     mat4_mul(m4inverted, projection, view);
     mat4_invert(m4inverted, m4inverted);
 
     // compute 3 points so that we can interpolate instead of unprojecting
     // on every point
-    vec3 rda, rdb, planeYPosition, dcol, drow;
+    vec3 t0 = vec3_create(0, 0, 0), tx = vec3_create(1, 0, 0), ty = vec3_create(0, 1, 0);
+    vec4 viewport = vec4_create(0, 0, width, height);
 
-    vec3 t0 = {0, 0, 0}, tx = {1, 0, 0}, ty = {0, 1, 0};
-    vec4 viewport = { 0, 0, width, height };
-
-    orbit_camera_unproject(rda, t0, viewport, m4inverted);
-    orbit_camera_unproject(rdb, tx, viewport, m4inverted);
-    orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
-    vec3_sub(dcol, planeYPosition, rda);
-    vec3_sub(drow, rdb, rda);
+    vec3 rda = orbit_camera_unproject(t0, viewport, m4inverted);
+    vec3 rdb = orbit_camera_unproject(tx, viewport, m4inverted);
+    vec3 planeYPosition = orbit_camera_unproject(ty, viewport, m4inverted);
+    vec3 dcol = planeYPosition - rda;
+    vec3 drow = rdb - rda;
 
 
     int bh = (height/TOTAL_THREADS);
     for (int i=0; i<TOTAL_THREADS; i++) {
 
-      vec3_copy(areas[i].dcol, dcol);
-      vec3_copy(areas[i].drow, drow);
-      vec3_copy(areas[i].pos, planeYPosition);
-      vec3_copy(areas[i].ro, ro);
+      areas[i].dcol = dcol;
+      areas[i].drow = drow;
+      areas[i].pos = planeYPosition;
+      areas[i].ro = ro;
       areas[i].x = 0;
       areas[i].y = i*bh;
-      areas[i].width = width;//areas[i].x + (int)(bw);
+      areas[i].width = width;
       areas[i].height = areas[i].y + (int)(bh);
       areas[i].stride = stride;
       areas[i].data = data;

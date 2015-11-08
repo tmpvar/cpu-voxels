@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 2.6)
 project(cpuvoxels)
 
-set(PROJECT_BINARY_DIR ${CMAKE_SOURCE_DIR}/out)
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/out)
-set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR})
-set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/out)
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+# set(PROJECT_BINARY_DIR ${CMAKE_SOURCE_DIR}/out)
+# set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/out)
+# set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR})
+# set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/out)
+# set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-set(CMAKE_C_FLAGS "-O3")
+set(CMAKE_C_FLAGS "-march=native -msse4.2 -g")
 # configure linmath
 include_directories(deps/linmath)
 
@@ -34,4 +34,5 @@ target_link_libraries(
     ${GLFW_LIBRARIES}
 )
 
+add_executable(vectest src/test.c)
 
