@@ -63,11 +63,24 @@ static inline vec3 vec3_create(const float x, const float y, const float z) {
 }
 
 static inline float vec3_len(vec3 const v) {
-  return sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+  // _mm_dp_ps would be optimal here
+  return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v, v, 0x71)));
 }
 
 static inline float vec3_distance(vec3 const a, vec3 const b) {
   return vec3_len(a - b);
+}
+
+static inline vec3 vec3_max(const vec3 a, const vec3 b) {
+  return _mm_max_ps(a, b);
+}
+
+static inline vec3 vec3_min(const vec3 a, const vec3 b) {
+  return _mm_min_ps(a, b);
+}
+
+static inline vec3 vec3_copy(const vec3 a) {
+  return vec3_create(a[0], a[1], a[2]);
 }
 
 static inline vec3 vec3_mul_cross(const vec3 a, const vec3 b) {
