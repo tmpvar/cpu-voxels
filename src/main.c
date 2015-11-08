@@ -79,13 +79,12 @@ static vec3 orbit_camera_unproject(const vec3 vec, const vec4 viewport, const ma
   return vec3_transform(r, inv);
 }
 
-static void orbit_camera_view(const mat4 view) {
+static void orbit_camera_view(mat4 view) {
   quat q;
   vec3 s = vec3_create(0.0, 0.0, -orbit_camera.distance );
   quat_conj(q, orbit_camera.rotation);
   mat4_from_rotation_translation(view, q, s);
-  orbit_camera.v3scratch = vec3_negate(orbit_camera.center);
-  mat4_translate(view, orbit_camera.v3scratch);
+  mat4_translate(view, vec3_negate(orbit_camera.center));
 }
 
 static void error_callback(int error, const char* description) {
@@ -156,24 +155,23 @@ void render_screen_area(void *args) {
   int width = c->width;
   int height = c->height;
   int stride = c->stride;
-  vec3 planeYPosition = c->pos;
   vec3 planeXPosition;
 
-  vec3 dcol, drow, ro, rd, normal, scratch;
+  vec3 dcol, drow, ro, rd, normal;
   dcol = c->dcol;
   drow = c->drow;
   ro = c->ro;
   uint8_t *data = c->data;
 
-  scratch = dcol * vec3_create(c->y, c->y, c->y);
-  planeYPosition = scratch + c->pos;
+
+  vec3 planeYPosition = dcol * vec3_create(c->y, c->y, c->y) + c->pos;
 
   int x, y;
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
     for (x=0; x<width; ++x) {
       planeXPosition = planeXPosition + drow;
-      rd = planeXPosition + ro;
+      rd = planeXPosition - ro;
 
       unsigned long where = y * width * stride + x * stride;
       uint8_t isect;
@@ -182,7 +180,7 @@ void render_screen_area(void *args) {
       isect = ray_isect(&ray, ro, rd, c->bounds);
 
       if (isect) {
-        t = ray_aabb_lerp(&ray, ro, c->bounds, normal);
+        // normal = ray_aabb_lerp(&ray, ro, c->bounds, &t);
 
         data[where+0] = (int)(normal[0] * 127 + 127);
         data[where+1] = (int)(normal[1] * 127 + 127);
@@ -217,7 +215,7 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = vec3_create(0.0, 0.0, -10);
+  vec3 eye = vec3_create(0.0, 0.0, -1);
   vec3 center =  vec3_create(0.0, 0.0, 0.0 );
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
@@ -232,11 +230,11 @@ int main(void)
   uint8_t *data = malloc(total);
 
   aabb bounds = {
-    {-1, -1, -1},
-    { 1,  1,  1}
+    {-.1, -.1, -.1},
+    { .1,  .1,  .1}
   };
 
-  vec3 ro, rd;
+    vec3 ro; //, rd;
   mat4 m4inverted, view;
   mat4 projection;
   mat4_perspective(
@@ -253,8 +251,7 @@ int main(void)
   glGenTextures(1, texture);
   float start = glfwGetTime();
   int fps = 0;
-  unsigned long pixels = 0;
-  threadpool thpool = thpool_init(TOTAL_THREADS);
+//  threadpool thpool = thpool_init(TOTAL_THREADS);
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
@@ -279,7 +276,6 @@ int main(void)
       printf("fps: %i (%f Mrays/s)@%ix%i\n", fps, total_rays/1000000.0, width, height);
       start = now;
       fps = 0;
-      pixels = 0;
     }
     fps++;
 

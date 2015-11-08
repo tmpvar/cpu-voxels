@@ -43,7 +43,7 @@ uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
 
 static float ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, vec3 norm) {
 
-  float a, b, c;
+  float a = 0, b = 0, c = 0;
 
   switch (r->classification) {
     case MMM:
