@@ -9,7 +9,7 @@
 #include "ray.h"
 #include "ray-aabb.h"
 
-#define TOTAL_THREADS 4
+#define TOTAL_THREADS 1
 
 struct {
   uint8_t down;
@@ -27,7 +27,7 @@ static void orbit_camera_lookat(const vec3 eye, const vec3 center, const vec3 up
   mat4_look_at(orbit_camera.scratch0, eye, center, up);
   quat_from_mat4(orbit_camera.rotation, orbit_camera.scratch0);
   quat_norm(orbit_camera.rotation, orbit_camera.rotation);
-  vec3_copy(orbit_camera.center, center);
+  orbit_camera.center = center;
   orbit_camera.distance = vec3_distance(eye, center);
 }
 
@@ -37,8 +37,8 @@ static void orbit_camera_init(const vec3 eye, const vec3 center, const vec3 up) 
 }
 
 static void orbit_camera_rotate(const float sx, const float sy, const float ex, const float ey) {
-  const vec3 vs = { sx, sy, 0.0f };
-  const vec3 ve = { ex, ey, 0.0f };
+  const vec3 vs = vec3_create(sx, sy, 0.0f);
+  const vec3 ve = vec3_create(ex, ey, 0.0f);
   quat s, e;
 
   quat_from_vec3(s, vs);
@@ -56,7 +56,7 @@ static void orbit_camera_rotate(const float sx, const float sy, const float ex, 
   quat_norm(orbit_camera.rotation, orbit_camera.rotation);
 }
 
-static void orbit_camera_unproject(vec3 r, const vec3 vec, const vec4 viewport, const mat4 inv) {
+static vec3 orbit_camera_unproject(const vec3 vec, const vec4 viewport, const mat4 inv) {
   float viewX = viewport[0];
   float viewY = viewport[1];
   float viewWidth = viewport[2];
@@ -70,19 +70,21 @@ static void orbit_camera_unproject(vec3 r, const vec3 vec, const vec4 viewport, 
   y = viewHeight - y - 1;
   y = y - viewY;
 
-  r[0] = (2 * x) / viewWidth - 1;
-  r[1] = (2 * y) / viewHeight - 1;
-  r[2] = 2 * z - 1;
+  vec3 r = vec3_create(
+    (2 * x) / viewWidth - 1,
+    (2 * y) / viewHeight - 1,
+    2 * z - 1
+  );
 
-  vec3_transform(r, r, inv);
+  return vec3_transform(r, inv);
 }
 
 static void orbit_camera_view(const mat4 view) {
   quat q;
-  vec3 s = { 0.0, 0.0, -orbit_camera.distance };
+  vec3 s = vec3_create(0.0, 0.0, -orbit_camera.distance );
   quat_conj(q, orbit_camera.rotation);
   mat4_from_rotation_translation(view, q, s);
-  vec3_negate(orbit_camera.v3scratch, orbit_camera.center);
+  orbit_camera.v3scratch = vec3_negate(orbit_camera.center);
   mat4_translate(view, orbit_camera.v3scratch);
 }
 
@@ -126,7 +128,7 @@ void mouse_move_callback(GLFWwindow* window, double x, double y) {
   mouse.y = y;
 }
 
-void vec3_print(vec3 v) {
+void vec3_print(const vec3 v) {
   printf("(%f, %f, %f)\n", v[0], v[1], v[2]);
 }
 
@@ -154,25 +156,24 @@ void render_screen_area(void *args) {
   int width = c->width;
   int height = c->height;
   int stride = c->stride;
-  vec3 planeYPosition;
-  vec3_copy(planeYPosition, c->pos);
+  vec3 planeYPosition = c->pos;
   vec3 planeXPosition;
 
   vec3 dcol, drow, ro, rd, normal, scratch;
-  vec3_copy(dcol, c->dcol);
-  vec3_copy(drow, c->drow);
-  vec3_copy(ro, c->ro);
+  dcol = c->dcol;
+  drow = c->drow;
+  ro = c->ro;
   uint8_t *data = c->data;
 
-  vec3_scale(scratch, dcol, c->y);
-  vec3_add(planeYPosition, scratch, c->pos);
+  scratch = dcol * vec3_create(c->y, c->y, c->y);
+  planeYPosition = scratch + c->pos;
 
   int x, y;
   for (y=c->y; y<height; ++y) {
-    vec3_copy(planeXPosition, planeYPosition);
+    planeXPosition = planeYPosition;
     for (x=0; x<width; ++x) {
-      vec3_add(planeXPosition, planeXPosition, drow);
-      vec3_sub(rd, planeXPosition, ro);
+      planeXPosition = planeXPosition + drow;
+      rd = planeXPosition + ro;
 
       unsigned long where = y * width * stride + x * stride;
       uint8_t isect;
@@ -192,7 +193,7 @@ void render_screen_area(void *args) {
         data[where+2] = 0;
       }
     }
-    vec3_add(planeYPosition, planeYPosition, dcol);
+    planeYPosition += dcol;
   }
 }
 
@@ -216,9 +217,9 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = { 0.0, 0.0, -1 };
-  vec3 center = { 0.0, 0.0, 0.0 };
-  vec3 up = { 0.0, 1.0, 0.0 };
+  vec3 eye = vec3_create(0.0, 0.0, -10);
+  vec3 center =  vec3_create(0.0, 0.0, 0.0 );
+  vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
   orbit_camera_init(eye, center, up);
 
@@ -231,8 +232,8 @@ int main(void)
   uint8_t *data = malloc(total);
 
   aabb bounds = {
-    {-.1, -.1, -.1},
-    { .1,  .1,  .1}
+    {-1, -1, -1},
+    { 1,  1,  1}
   };
 
   vec3 ro, rd;
@@ -284,7 +285,7 @@ int main(void)
 
 
     orbit_camera_view(view);
-    mat4_get_eye(ro, view);
+    ro = mat4_get_eye(view);
 
     mat4_mul(m4inverted, projection, view);
     mat4_invert(m4inverted, m4inverted);
@@ -293,15 +294,14 @@ int main(void)
     // on every point
     vec3 rda, rdb, planeYPosition, dcol, drow;
 
-    vec3 t0 = {0, 0, 0}, tx = {1, 0, 0}, ty = {0, 1, 0};
+    vec3 t0 = vec3_create(0, 0, 0), tx = vec3_create(1, 0, 0), ty = vec3_create(0, 1, 0);
     vec4 viewport = { 0, 0, width, height };
 
-    orbit_camera_unproject(rda, t0, viewport, m4inverted);
-    orbit_camera_unproject(rdb, tx, viewport, m4inverted);
-    orbit_camera_unproject(planeYPosition, ty, viewport, m4inverted);
-    vec3_sub(dcol, planeYPosition, rda);
-    vec3_sub(drow, rdb, rda);
-
+    rda = orbit_camera_unproject(t0, viewport, m4inverted);
+    rdb = orbit_camera_unproject(tx, viewport, m4inverted);
+    planeYPosition = orbit_camera_unproject(ty, viewport, m4inverted);
+    dcol = planeYPosition - rda;
+    drow = rdb - rda;
 
     // int bh = (height/TOTAL_THREADS);
     // for (int i=0; i<TOTAL_THREADS; i++) {
@@ -330,10 +330,10 @@ int main(void)
 
     // thpool_wait(thpool);
 
-    vec3_copy(areas[0].dcol, dcol);
-    vec3_copy(areas[0].drow, drow);
-    vec3_copy(areas[0].pos, planeYPosition);
-    vec3_copy(areas[0].ro, ro);
+    areas[0].dcol = dcol;
+    areas[0].drow = drow;
+    areas[0].pos = planeYPosition;
+    areas[0].ro = ro;
     areas[0].x = 0;
     areas[0].y = 0;
     areas[0].width = width;//areas[i].x + (int)(bw);
@@ -348,7 +348,6 @@ int main(void)
     areas[0].bounds[1][2] = bounds[1][2];
 
     render_screen_area((void *)(&areas[0]));
-
 
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
