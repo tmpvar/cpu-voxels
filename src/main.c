@@ -303,32 +303,52 @@ int main(void)
     vec3_sub(drow, rdb, rda);
 
 
-    int bh = (height/TOTAL_THREADS);
-    for (int i=0; i<TOTAL_THREADS; i++) {
+    // int bh = (height/TOTAL_THREADS);
+    // for (int i=0; i<TOTAL_THREADS; i++) {
 
-      vec3_copy(areas[i].dcol, dcol);
-      vec3_copy(areas[i].drow, drow);
-      vec3_copy(areas[i].pos, planeYPosition);
-      vec3_copy(areas[i].ro, ro);
-      areas[i].x = 0;
-      areas[i].y = i*bh;
-      areas[i].width = width;//areas[i].x + (int)(bw);
-      areas[i].height = areas[i].y + (int)(bh);
-      areas[i].stride = stride;
-      areas[i].data = data;
-      areas[i].render_id = i;
+    //   vec3_copy(areas[i].dcol, dcol);
+    //   vec3_copy(areas[i].drow, drow);
+    //   vec3_copy(areas[i].pos, planeYPosition);
+    //   vec3_copy(areas[i].ro, ro);
+    //   areas[i].x = 0;
+    //   areas[i].y = i*bh;
+    //   areas[i].width = width;//areas[i].x + (int)(bw);
+    //   areas[i].height = areas[i].y + (int)(bh);
+    //   areas[i].stride = stride;
+    //   areas[i].data = data;
+    //   areas[i].render_id = i;
 
-      areas[i].bounds[0][0] = bounds[0][0];
-      areas[i].bounds[0][1] = bounds[0][1];
-      areas[i].bounds[0][2] = bounds[0][2];
-      areas[i].bounds[1][0] = bounds[1][0];
-      areas[i].bounds[1][1] = bounds[1][1];
-      areas[i].bounds[1][2] = bounds[1][2];
+    //   areas[i].bounds[0][0] = bounds[0][0];
+    //   areas[i].bounds[0][1] = bounds[0][1];
+    //   areas[i].bounds[0][2] = bounds[0][2];
+    //   areas[i].bounds[1][0] = bounds[1][0];
+    //   areas[i].bounds[1][1] = bounds[1][1];
+    //   areas[i].bounds[1][2] = bounds[1][2];
 
-      thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
-    }
+    //   thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
+    // }
 
-    thpool_wait(thpool);
+    // thpool_wait(thpool);
+
+    vec3_copy(areas[0].dcol, dcol);
+    vec3_copy(areas[0].drow, drow);
+    vec3_copy(areas[0].pos, planeYPosition);
+    vec3_copy(areas[0].ro, ro);
+    areas[0].x = 0;
+    areas[0].y = 0;
+    areas[0].width = width;//areas[i].x + (int)(bw);
+    areas[0].height = height;
+    areas[0].stride = stride;
+    areas[0].data = data;
+    areas[0].bounds[0][0] = bounds[0][0];
+    areas[0].bounds[0][1] = bounds[0][1];
+    areas[0].bounds[0][2] = bounds[0][2];
+    areas[0].bounds[1][0] = bounds[1][0];
+    areas[0].bounds[1][1] = bounds[1][1];
+    areas[0].bounds[1][2] = bounds[1][2];
+
+    render_screen_area((void *)(&areas[0]));
+
 
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
