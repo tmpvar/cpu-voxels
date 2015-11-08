@@ -95,6 +95,10 @@ static inline vec3 vec3_transform(const vec3 a, const mat4 m) {
   );
 }
 
+static inline vec3 vec3_reciprocal(vec3 const v) {
+  return _mm_rcp_ps(v);
+}
+
 static inline vec3 vec3_negate(vec3 const v) {
   return vec3_create(-v[0], -v[1], -v[1]);
 }

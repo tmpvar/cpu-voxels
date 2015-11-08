@@ -52,9 +52,7 @@ enum CLASSIFICATION {
 typedef struct ray_t
 {
   //common variables
-  float x, y, z;    // ray origin
-  float i, j, k;    // ray direction
-  float ii, ij, ik; // inverses of direction components
+  vec3 invdir;
 
   // ray slope
   int classification;
@@ -83,12 +81,8 @@ static int ray_classify(const vec3 rd) {
           (k&1);
 }
 
-static inline void ray_update(ray3 *r, const vec3 rd)
-{
-  r->ii = 1.0f/rd[0];
-  r->ij = 1.0f/rd[1];
-  r->ik = 1.0f/rd[2];
-
+static inline void ray_update(ray3 *r, const vec3 rd) {
+  r->invdir = vec3_reciprocal(rd);
   r->classification = ray_classify(rd);
 }
 
