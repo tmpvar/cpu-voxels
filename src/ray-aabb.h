@@ -15,6 +15,10 @@
 #include "ray.h"
 #include "aabb.h"
 #include <3d.h>
+#include <xmmintrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#include <avxintrin.h>
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
