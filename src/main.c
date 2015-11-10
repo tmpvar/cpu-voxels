@@ -183,13 +183,14 @@ void render_screen_area(void *args) {
         packet.invdir[1][i] = invdir[i][1];
         packet.invdir[2][i] = invdir[i][2];
       }
-
-      result = ray_isect_packet(packet, c->bounds);
+      vec3 m;
+      result = ray_isect_packet(packet, c->bounds, &m);
       for (int j=0; j<4; j++) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
         if (result & (1<<j)) {
 
+          // normal
           normal = ray_aabb_lerp(ro, invdir[j], ray_classify(invdir[j]), c->bounds, &t);
 
           data[where+0] = (int)(normal[0] * 127 + 127);
