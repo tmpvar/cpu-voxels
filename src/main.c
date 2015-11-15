@@ -169,15 +169,18 @@ void render_screen_area(void *args) {
   packet.origin[1] = vec3f(ro[1]);
   packet.origin[2] = vec3f(ro[2]);
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
-  vec3 invdir[4];
+  vec3 invdir[4], dir[4];
+  vec3 center = (c->bounds[0] + c->bounds[1]) / vec3f(2.0f);
+  float r = (c->bounds[1][0] - center[0]) * 0.99f;
   int result;
   int x, y;
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
     for (x=0; x<width; x+=4) {
       for (int i=0; i<4; i++) {
-        planeXPosition = planeXPosition + drow;// * vec3_create(x, x, x);
+        planeXPosition += drow;
         rd = planeXPosition - ro;
+        dir[i] = rd;
         invdir[i] = vec3_reciprocal(rd);
         packet.invdir[0][i] = invdir[i][0];
         packet.invdir[1][i] = invdir[i][1];
@@ -189,9 +192,17 @@ void render_screen_area(void *args) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
         if (result & (1<<j)) {
+          vec3 o = (ro + dir[j] * vec3f(m[j])) - center;
 
-          // normal
-          normal = ray_aabb_lerp(ro, invdir[j], ray_classify(invdir[j]), c->bounds, &t);
+          for (int k=0; k<3; k++) {
+            if (fabsf(o[k]) >= r) {
+              normal[k] = o[k] > 0.0f ? 1.0f : -1.0f;
+            } else {
+              normal[k] = 0.0f;
+            }
+          }
+
+          normal = vec3_norm(normal);
 
           data[where+0] = (int)(normal[0] * 127 + 127);
           data[where+1] = (int)(normal[1] * 127 + 127);
