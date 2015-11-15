@@ -171,7 +171,7 @@ void render_screen_area(void *args) {
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
   vec3 invdir[4], dir[4];
   vec3 center = (c->bounds[0] + c->bounds[1]) / vec3f(2.0f);
-  float r = (c->bounds[1][0] - center[0]) * 0.99f;
+  float r = (c->bounds[1][0] - center[0]) * 0.97f;
   int result;
   int x, y;
   for (y=c->y; y<height; ++y) {
@@ -202,11 +202,23 @@ void render_screen_area(void *args) {
             }
           }
 
-          normal = vec3_norm(normal);
+          // normal = vec3_norm(normal);
+          // normal = o;
+          float sum = fabsf(normal[0]) + fabsf(normal[1]) + fabsf(normal[2]);
 
-          data[where+0] = (int)(normal[0] * 127 + 127);
-          data[where+1] = (int)(normal[1] * 127 + 127);
-          data[where+2] = (int)(normal[2] * 127 + 127);
+          if (sum == 3) {
+            data[where+0] = 140;//(int)(normal[0] * 255 + 127);
+            data[where+1] = 140;//(int)(normal[1] * 255 + 127);
+            data[where+2] = 140;//(int)(normal[2] * 255 + 127);
+          } else if (sum == 2) {
+            data[where+0] = 160;//(int)(normal[0] * 255 + 127);
+            data[where+1] = 160;//(int)(normal[1] * 255 + 127);
+            data[where+2] = 160;//(int)(normal[2] * 255 + 127);
+          } else {
+            data[where+0] = (int)(o[0] * 255 + 127);
+            data[where+1] = (int)(o[1] * 255 + 127);
+            data[where+2] = (int)(o[2] * 255 + 127);
+          }
         } else {
           data[where+0] = 0;
           data[where+1] = 0;
@@ -225,7 +237,7 @@ int main(void)
   glfwSetErrorCallback(error_callback);
   if (!glfwInit())
     exit(EXIT_FAILURE);
-  window = glfwCreateWindow(width, height, "Simple example", NULL, NULL);
+  window = glfwCreateWindow(width, height, "cpu-voxels", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
