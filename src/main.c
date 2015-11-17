@@ -215,9 +215,9 @@ void render_screen_area(void *args) {
             data[where+1] = 160;//(int)(normal[1] * 255 + 127);
             data[where+2] = 160;//(int)(normal[2] * 255 + 127);
           } else {
-            data[where+0] = (int)(o[0] * 255 + 127);
-            data[where+1] = (int)(o[1] * 255 + 127);
-            data[where+2] = (int)(o[2] * 255 + 127);
+            data[where+0] = 0;//(int)(o[0] * 255 + 127);
+            data[where+1] = 0;//(int)(o[1] * 255 + 127);
+            data[where+2] = 0;//(int)(o[2] * 255 + 127);
           }
         } else {
           data[where+0] = 0;
@@ -232,6 +232,10 @@ void render_screen_area(void *args) {
 
 int main(void)
 {
+
+  _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+
   int width = 800, height = 600;
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
