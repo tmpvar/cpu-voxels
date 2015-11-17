@@ -170,7 +170,7 @@ void render_screen_area(void *args) {
   packet.origin[2] = vec3f(ro[2]);
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
   vec3 invdir[4], dir[4];
-  vec3 center = (c->bounds[0] + c->bounds[1]) / vec3f(2.0f);
+  vec3 center = aabb_center(c->bounds);
   float r = (c->bounds[1][0] - center[0]) * 0.97f;
   int result;
   int x, y;
