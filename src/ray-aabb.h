@@ -23,33 +23,12 @@
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
-uint8_t ray_isect(ray3 *r, aabb b) {
-  vec3 lb = (b[0] - r->origin) * r->invdir;
-  vec3 ub = (b[1] - r->origin) * r->invdir;
+const __m128 zero = { 0.0f, 0.0f, 0.0f };
+#define shuffle_x _MM_SHUFFLE(0, 0, 0, 0)
+#define shuffle_y _MM_SHUFFLE(1, 1, 1, 1)
+#define shuffle_z _MM_SHUFFLE(2, 2, 2, 2)
 
-  float tx1 = lb[0];//(b[0][0] - ro[0])*r->invdir[0];
-  float tx2 = ub[0];//(b[1][0] - ro[0])*r->invdir[0];
-
-  float tmin = min(tx1, tx2);
-  float tmax = max(tx1, tx2);
-
-  float ty1 = lb[1];//(b[0][1] - ro[1])*r->invdir[1];
-  float ty2 = ub[1];//(b[1][1] - ro[1])*r->invdir[1];
-
-  tmin = max(tmin, min(ty1, ty2));
-  tmax = min(tmax, max(ty1, ty2));
-
-  float tz1 = lb[2];//(b[0][2] - ro[2])*r->invdir[2];
-  float tz2 = ub[2];//(b[1][2] - ro[2])*r->invdir[2];
-
-  tmin = max(tmin, min(tz1, tz2));
-  tmax = min(tmax, max(tz1, tz2));
-
-  return tmax >= max(0.0, tmin);
-}
-
-__m128 zero = { 0.0f, 0.0f, 0.0f };
-int ray_isect_packet(ray_packet3 packet, aabb b, vec3 *m) {
+static inline int ray_isect_packet(ray_packet3 packet, aabb b, vec3 *m) {
   // TODO: bundle 4 rays together
   vec3 origin;
   vec3 invdir;
@@ -61,8 +40,8 @@ int ray_isect_packet(ray_packet3 packet, aabb b, vec3 *m) {
   // X Axis
   origin = packet.origin[0];
   invdir = packet.invdir[0];
-  lambda1 = (_mm_permute_ps(b[0], _MM_SHUFFLE(0, 0, 0, 0)) - origin) * invdir;
-  lambda2 = (_mm_permute_ps(b[1], _MM_SHUFFLE(0, 0, 0, 0)) - origin) * invdir;
+  lambda1 = (_mm_permute_ps(b[0], shuffle_x) - origin) * invdir;
+  lambda2 = (_mm_permute_ps(b[1], shuffle_x) - origin) * invdir;
   lmin = _mm_min_ps(lambda1, lambda2);
   lmax = _mm_max_ps(lambda1, lambda2);
 
@@ -70,8 +49,8 @@ int ray_isect_packet(ray_packet3 packet, aabb b, vec3 *m) {
   origin = packet.origin[1];
   invdir = packet.invdir[1];
 
-  lambda1 = (_mm_permute_ps(b[0], _MM_SHUFFLE(1, 1, 1, 1)) - origin) * invdir;
-  lambda2 = (_mm_permute_ps(b[1], _MM_SHUFFLE(1, 1, 1, 1)) - origin) * invdir;
+  lambda1 = (_mm_permute_ps(b[0], shuffle_y) - origin) * invdir;
+  lambda2 = (_mm_permute_ps(b[1], shuffle_y) - origin) * invdir;
   lmin = _mm_max_ps(_mm_min_ps(lambda1, lambda2), lmin);
   lmax = _mm_min_ps(_mm_max_ps(lambda1, lambda2), lmax);
 
@@ -79,8 +58,8 @@ int ray_isect_packet(ray_packet3 packet, aabb b, vec3 *m) {
   origin = packet.origin[2];
   invdir = packet.invdir[2];
 
-  lambda1 = (_mm_permute_ps(b[0], _MM_SHUFFLE(2, 2, 2, 2)) - origin) * invdir;
-  lambda2 = (_mm_permute_ps(b[1], _MM_SHUFFLE(2, 2, 2, 2)) - origin) * invdir;
+  lambda1 = (_mm_permute_ps(b[0], shuffle_z) - origin) * invdir;
+  lambda2 = (_mm_permute_ps(b[1], shuffle_z) - origin) * invdir;
   lmin = _mm_max_ps(_mm_min_ps(lambda1, lambda2), lmin);
   lmax = _mm_min_ps(_mm_max_ps(lambda1, lambda2), lmax);
   *m = lmin;

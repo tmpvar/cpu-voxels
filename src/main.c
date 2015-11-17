@@ -171,6 +171,7 @@ void render_screen_area(void *args) {
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
   vec3 invdir[4], dir[4];
   vec3 center = aabb_center(c->bounds);
+  vec3 m;
   float r = (c->bounds[1][0] - center[0]) * 0.97f;
   int result;
   int x, y;
@@ -186,7 +187,7 @@ void render_screen_area(void *args) {
         packet.invdir[1][i] = invdir[i][1];
         packet.invdir[2][i] = invdir[i][2];
       }
-      vec3 m;
+
       result = ray_isect_packet(packet, c->bounds, &m);
       for (int j=0; j<4; j++) {
         unsigned long where = y * width * stride + (x + j) * stride;
