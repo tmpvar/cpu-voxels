@@ -61,8 +61,8 @@ typedef struct ray_t
 
 typedef struct ray_packet_t {
   // stored as [0]=x, [1]=y, [2]=z
-  vec3 invdir[4];
-  vec3 origin[3];
+  __m256 invdir[8];
+  __m256 origin[3];
 } ray_packet3;
 
 static int ray_classify(const vec3 rd) {

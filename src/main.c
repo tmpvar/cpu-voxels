@@ -165,31 +165,68 @@ void render_screen_area(void *args) {
   ro = c->ro;
   uint8_t *data = c->data;
   ray_packet3 packet;
-  packet.origin[0] = vec3f(ro[0]);
-  packet.origin[1] = vec3f(ro[1]);
-  packet.origin[2] = vec3f(ro[2]);
+  packet.origin[0] = _mm256_set1_ps(ro[0]);
+  packet.origin[1] = _mm256_set1_ps(ro[1]);
+  packet.origin[2] = _mm256_set1_ps(ro[2]);
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
-  vec3 invdir[4], dir[4];
+  vec3 invdir[8], dir[8];
   vec3 center = aabb_center(c->bounds);
-  vec3 m;
+  __m256 m;
   float r = (c->bounds[1][0] - center[0]) * 0.97f;
   int result;
   int x, y;
+
+  aabb_packet bounds;
+  bounds[0] = _mm256_set1_ps(c->bounds[0][0] - ro[0]);
+  bounds[1] = _mm256_set1_ps(c->bounds[0][1] - ro[1]);
+  bounds[2] = _mm256_set1_ps(c->bounds[0][2] - ro[2]);
+  bounds[3] = _mm256_set1_ps(c->bounds[1][0] - ro[0]);
+  bounds[4] = _mm256_set1_ps(c->bounds[1][1] - ro[1]);
+  bounds[5] = _mm256_set1_ps(c->bounds[1][2] - ro[2]);
+
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
-    for (x=0; x<width; x+=4) {
-      for (int i=0; i<4; i++) {
+    for (x=0; x<width; x+=8) {
+      for (int i=0; i<8; i++) {
         planeXPosition += drow;
         rd = planeXPosition - ro;
         dir[i] = rd;
         invdir[i] = vec3_reciprocal(rd);
-        packet.invdir[0][i] = invdir[i][0];
-        packet.invdir[1][i] = invdir[i][1];
-        packet.invdir[2][i] = invdir[i][2];
       }
 
-      result = ray_isect_packet(packet, c->bounds, &m);
-      for (int j=0; j<4; j++) {
+      packet.invdir[0] = _mm256_set_ps(
+        invdir[0][0],
+        invdir[1][0],
+        invdir[2][0],
+        invdir[3][0],
+        invdir[4][0],
+        invdir[5][0],
+        invdir[6][0],
+        invdir[7][0]
+      );
+      packet.invdir[1] = _mm256_set_ps(
+        invdir[0][1],
+        invdir[1][1],
+        invdir[2][1],
+        invdir[3][1],
+        invdir[4][1],
+        invdir[5][1],
+        invdir[6][1],
+        invdir[7][1]
+      );
+      packet.invdir[2] = _mm256_set_ps(
+        invdir[0][2],
+        invdir[1][2],
+        invdir[2][2],
+        invdir[3][2],
+        invdir[4][2],
+        invdir[5][2],
+        invdir[6][2],
+        invdir[7][2]
+      );
+
+      result = ray_isect_packet(packet, bounds, &m);
+      for (int j=0; j<8; j++) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
         if (result & (1<<j)) {
