@@ -326,7 +326,7 @@ int main(void)
     float now = glfwGetTime();
     if (now - start > 1) {
       unsigned long long total_rays = (fps * width * height);
-      printf("fps: %i (%f Mrays/s)@%ix%i\n", fps, total_rays/1000000.0, width, height);
+      printf("fps: %i (%f Mrays/s)@%ix%i - %i threads\n", fps, total_rays/1000000.0, width, height, TOTAL_THREADS);
       start = now;
       fps = 0;
     }
