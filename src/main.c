@@ -175,6 +175,15 @@ void render_screen_area(void *args) {
   float r = (c->bounds[1][0] - center[0]) * 0.97f;
   int result;
   int x, y;
+
+  aabb_packet bounds;
+  bounds[0] = _mm_set1_ps(c->bounds[0][0] - ro[0]);
+  bounds[1] = _mm_set1_ps(c->bounds[0][1] - ro[1]);
+  bounds[2] = _mm_set1_ps(c->bounds[0][2] - ro[2]);
+  bounds[3] = _mm_set1_ps(c->bounds[1][0] - ro[0]);
+  bounds[4] = _mm_set1_ps(c->bounds[1][1] - ro[1]);
+  bounds[5] = _mm_set1_ps(c->bounds[1][2] - ro[2]);
+
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
     for (x=0; x<width; x+=4) {
@@ -188,7 +197,7 @@ void render_screen_area(void *args) {
         packet.invdir[2][i] = invdir[i][2];
       }
 
-      result = ray_isect_packet(packet, c->bounds, &m);
+      result = ray_isect_packet(packet, bounds, &m);
       for (int j=0; j<4; j++) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
