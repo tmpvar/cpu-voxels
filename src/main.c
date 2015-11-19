@@ -72,7 +72,7 @@ typedef struct {
   vec3 drow;
   vec3 ro;
   vec4 color;
-  aabb bounds;
+  voxel_brick *brick;
 } screen_area;
 
 void render_screen_area(void *args) {
@@ -85,7 +85,7 @@ void render_screen_area(void *args) {
   int stride = c->stride;
   vec3 planeXPosition;
 
-  vec3 dcol, drow, ro, rd, normal;
+  vec3 dcol, drow, ro, rd, normal, o;
   dcol = c->dcol;
   drow = c->drow;
   ro = c->ro;
@@ -96,19 +96,21 @@ void render_screen_area(void *args) {
   packet.origin[2] = vec3f(ro[2]);
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
   vec3 invdir[4], dir[4];
-  vec3 center = aabb_center(c->bounds);
+  // vec3 center = aabb_center(c->bounds);
+  vec3 center = c->brick->center;
   vec3 m;
-  float r = (c->bounds[1][0] - center[0]) * 0.97f;
+  // float r = (c->bounds[1][0] - center[0]) * 0.97f;
+  float r = VOXEL_BRICK_SIZE * 0.97f;
   int result;
   int x, y;
 
   aabb_packet bounds;
-  bounds[0] = _mm_set1_ps(c->bounds[0][0] - ro[0]);
-  bounds[1] = _mm_set1_ps(c->bounds[0][1] - ro[1]);
-  bounds[2] = _mm_set1_ps(c->bounds[0][2] - ro[2]);
-  bounds[3] = _mm_set1_ps(c->bounds[1][0] - ro[0]);
-  bounds[4] = _mm_set1_ps(c->bounds[1][1] - ro[1]);
-  bounds[5] = _mm_set1_ps(c->bounds[1][2] - ro[2]);
+  bounds[0] = _mm_sub_ps(c->brick->bounds_packet[0], vec3f(ro[0]));
+  bounds[1] = _mm_sub_ps(c->brick->bounds_packet[1], vec3f(ro[1]));
+  bounds[2] = _mm_sub_ps(c->brick->bounds_packet[2], vec3f(ro[2]));
+  bounds[3] = _mm_sub_ps(c->brick->bounds_packet[3], vec3f(ro[0]));
+  bounds[4] = _mm_sub_ps(c->brick->bounds_packet[4], vec3f(ro[1]));
+  bounds[5] = _mm_sub_ps(c->brick->bounds_packet[5], vec3f(ro[2]));
 
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
@@ -128,7 +130,7 @@ void render_screen_area(void *args) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
         if (result & (1<<j)) {
-          vec3 o = (ro + dir[j] * vec3f(m[j])) - center;
+          o = (ro + dir[j] * vec3f(m[j])) - center;
 
           for (int k=0; k<3; k++) {
             if (fabsf(o[k]) >= r) {
@@ -138,8 +140,6 @@ void render_screen_area(void *args) {
             }
           }
 
-          // normal = vec3_norm(normal);
-          // normal = o;
           float sum = fabsf(normal[0]) + fabsf(normal[1]) + fabsf(normal[2]);
 
           if (sum == 3) {
@@ -190,7 +190,7 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = vec3_create(0.0, 0.0, -1);
+  vec3 eye = vec3_create(0.0, 0.0, -1.0);
   vec3 center = vec3_create(0.0, 0.0, 0.0 );
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
@@ -231,6 +231,9 @@ int main(void)
   glGenTextures(1, texture);
   float start = glfwGetTime();
   int fps = 0;
+  voxel_brick my_first_brick;
+  vec3 zero = vec3f(0.0f);
+  voxel_brick_position(&my_first_brick, zero);
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
@@ -288,18 +291,12 @@ int main(void)
       areas[i].ro = ro;
       areas[i].x = 0;
       areas[i].y = i*bh;
-      areas[i].width = width;//areas[i].x + (int)(bw);
+      areas[i].width = width;
       areas[i].height = areas[i].y + (int)(bh);
       areas[i].stride = stride;
       areas[i].data = data;
       areas[i].render_id = i;
-
-      areas[i].bounds[0][0] = bounds[0][0];
-      areas[i].bounds[0][1] = bounds[0][1];
-      areas[i].bounds[0][2] = bounds[0][2];
-      areas[i].bounds[1][0] = bounds[1][0];
-      areas[i].bounds[1][1] = bounds[1][1];
-      areas[i].bounds[1][2] = bounds[1][2];
+      areas[i].brick = &my_first_brick;
 
       thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
     }
@@ -312,16 +309,11 @@ int main(void)
     areas[0].ro = ro;
     areas[0].x = 0;
     areas[0].y = 0;
-    areas[0].width = width;//areas[i].x + (int)(bw);
+    areas[0].width = width;
     areas[0].height = height;
     areas[0].stride = stride;
     areas[0].data = data;
-    areas[0].bounds[0][0] = bounds[0][0];
-    areas[0].bounds[0][1] = bounds[0][1];
-    areas[0].bounds[0][2] = bounds[0][2];
-    areas[0].bounds[1][0] = bounds[1][0];
-    areas[0].bounds[1][1] = bounds[1][1];
-    areas[0].bounds[1][2] = bounds[1][2];
+    areas[0].brick = &my_first_brick;
 
     render_screen_area((void *)(&areas[0]));
 #endif
