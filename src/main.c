@@ -45,12 +45,7 @@ void mouse_move_callback(GLFWwindow* window, double x, double y) {
     int w, h;
     glfwGetWindowSize(window, &w, &h);
 
-    orbit_camera_rotate(
-      mouse.x / w - 0.5,
-      mouse.y / h - 0.5,
-      x / w - 0.5,
-      y / h - 0.5
-    );
+    orbit_camera_rotate(0, 0, (mouse.x - x) / w, (mouse.y - y) / h);
 
     printf("here (%f, %f) -> (%f, %f)\n", mouse.x / w - 0.5,  mouse.y / h - 0.5, x/w-.5, y/h-.5);
   }
