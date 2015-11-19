@@ -1,5 +1,5 @@
 #ifndef __AABB__
 #define __AABB__
 
- typedef float aabb[2][3];
+ typedef __m128 aabb[2];
 #endif

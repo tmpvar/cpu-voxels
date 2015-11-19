@@ -19,26 +19,36 @@
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
+#define rotatelps(ps)   _mm_shuffle_ps((ps),(ps), 0x39)
+
 uint8_t ray_isect(ray3 *r, vec3 ro, vec3 rd, aabb b) {
-  float tx1 = (b[0][0] - ro[0])*r->invdir[0];
-  float tx2 = (b[1][0] - ro[0])*r->invdir[0];
+  __m128 l1 = (b[0] - ro) * r->invdir;
+  __m128 l2 = (b[1] - ro) * r->invdir;
+  __m128 lmax = _mm_max_ps(l1, l2);
+  __m128 lmin = _mm_min_ps(l1, l2);
+  const __m128 lmax0 = rotatelps(lmax);
+  const __m128 lmin0 = rotatelps(lmin);
+  lmax = _mm_min_ss(lmax, lmax0);
+  lmin = _mm_max_ss(lmin, lmin0);
+  // float tx1 = (b[0][0] - ro[0])*r->invdir[0];
+  // float tx2 = (b[1][0] - ro[0])*r->invdir[0];
 
-  float tmin = min(tx1, tx2);
-  float tmax = max(tx1, tx2);
+  // float tmin = min(tx1, tx2);
+  // float tmax = max(tx1, tx2);
 
-  float ty1 = (b[0][1] - ro[1])*r->invdir[1];
-  float ty2 = (b[1][1] - ro[1])*r->invdir[1];
+  // float ty1 = (b[0][1] - ro[1])*r->invdir[1];
+  // float ty2 = (b[1][1] - ro[1])*r->invdir[1];
 
-  tmin = max(tmin, min(ty1, ty2));
-  tmax = min(tmax, max(ty1, ty2));
+  // tmin = max(tmin, min(ty1, ty2));
+  // tmax = min(tmax, max(ty1, ty2));
 
-  float tz1 = (b[0][2] - ro[2])*r->invdir[2];
-  float tz2 = (b[1][2] - ro[2])*r->invdir[2];
+  // float tz1 = (b[0][2] - ro[2])*r->invdir[2];
+  // float tz2 = (b[1][2] - ro[2])*r->invdir[2];
 
-  tmin = max(tmin, min(tz1, tz2));
-  tmax = min(tmax, max(tz1, tz2));
-
-  return tmax >= max(0.0, tmin);
+  // tmin = max(tmin, min(tz1, tz2));
+  // tmax = min(tmax, max(tz1, tz2));
+  return _mm_comige_ss(lmax, _mm_setzero_ps()) & _mm_comige_ss(lmax,lmin);
+  //return tmax >= max(0.0, tmin);
 }
 
 static vec3 ray_aabb_lerp(ray3 *r, vec3 ro, aabb box, float *t) {

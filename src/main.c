@@ -9,7 +9,7 @@
 #include "ray.h"
 #include "ray-aabb.h"
 
-#define TOTAL_THREADS 1
+#define TOTAL_THREADS 4
 
 struct {
   uint8_t down;
@@ -197,6 +197,9 @@ void render_screen_area(void *args) {
 
 int main(void)
 {
+  _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+
   int width = 800, height = 600;
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
@@ -251,7 +254,7 @@ int main(void)
   glGenTextures(1, texture);
   float start = glfwGetTime();
   int fps = 0;
-//  threadpool thpool = thpool_init(TOTAL_THREADS);
+  threadpool thpool = thpool_init(TOTAL_THREADS);
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
@@ -299,49 +302,49 @@ int main(void)
     dcol = planeYPosition - rda;
     drow = rdb - rda;
 
-    // int bh = (height/TOTAL_THREADS);
-    // for (int i=0; i<TOTAL_THREADS; i++) {
+    int bh = (height/TOTAL_THREADS);
+    for (int i=0; i<TOTAL_THREADS; i++) {
 
-    //   vec3_copy(areas[i].dcol, dcol);
-    //   vec3_copy(areas[i].drow, drow);
-    //   vec3_copy(areas[i].pos, planeYPosition);
-    //   vec3_copy(areas[i].ro, ro);
-    //   areas[i].x = 0;
-    //   areas[i].y = i*bh;
-    //   areas[i].width = width;//areas[i].x + (int)(bw);
-    //   areas[i].height = areas[i].y + (int)(bh);
-    //   areas[i].stride = stride;
-    //   areas[i].data = data;
-    //   areas[i].render_id = i;
+      areas[i].dcol = dcol;
+      areas[i].drow = drow;
+      areas[i].pos = planeYPosition;
+      areas[i].ro = ro;
+      areas[i].x = 0;
+      areas[i].y = i*bh;
+      areas[i].width = width;//areas[i].x + (int)(bw);
+      areas[i].height = areas[i].y + (int)(bh);
+      areas[i].stride = stride;
+      areas[i].data = data;
+      areas[i].render_id = i;
 
-    //   areas[i].bounds[0][0] = bounds[0][0];
-    //   areas[i].bounds[0][1] = bounds[0][1];
-    //   areas[i].bounds[0][2] = bounds[0][2];
-    //   areas[i].bounds[1][0] = bounds[1][0];
-    //   areas[i].bounds[1][1] = bounds[1][1];
-    //   areas[i].bounds[1][2] = bounds[1][2];
+      areas[i].bounds[0][0] = bounds[0][0];
+      areas[i].bounds[0][1] = bounds[0][1];
+      areas[i].bounds[0][2] = bounds[0][2];
+      areas[i].bounds[1][0] = bounds[1][0];
+      areas[i].bounds[1][1] = bounds[1][1];
+      areas[i].bounds[1][2] = bounds[1][2];
 
-    //   thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
-    // }
+      thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
+    }
 
-    // thpool_wait(thpool);
+    thpool_wait(thpool);
 
-    areas[0].dcol = dcol;
-    areas[0].drow = drow;
-    areas[0].pos = planeYPosition;
-    areas[0].ro = ro;
-    areas[0].x = 0;
-    areas[0].y = 0;
-    areas[0].width = width;//areas[i].x + (int)(bw);
-    areas[0].height = height;
-    areas[0].stride = stride;
-    areas[0].data = data;
-    areas[0].bounds[0][0] = bounds[0][0];
-    areas[0].bounds[0][1] = bounds[0][1];
-    areas[0].bounds[0][2] = bounds[0][2];
-    areas[0].bounds[1][0] = bounds[1][0];
-    areas[0].bounds[1][1] = bounds[1][1];
-    areas[0].bounds[1][2] = bounds[1][2];
+    // areas[0].dcol = dcol;
+    // areas[0].drow = drow;
+    // areas[0].pos = planeYPosition;
+    // areas[0].ro = ro;
+    // areas[0].x = 0;
+    // areas[0].y = 0;
+    // areas[0].width = width;//areas[i].x + (int)(bw);
+    // areas[0].height = height;
+    // areas[0].stride = stride;
+    // areas[0].data = data;
+    // areas[0].bounds[0][0] = bounds[0][0];
+    // areas[0].bounds[0][1] = bounds[0][1];
+    // areas[0].bounds[0][2] = bounds[0][2];
+    // areas[0].bounds[1][0] = bounds[1][0];
+    // areas[0].bounds[1][1] = bounds[1][1];
+    // areas[0].bounds[1][2] = bounds[1][2];
 
     render_screen_area((void *)(&areas[0]));
 
