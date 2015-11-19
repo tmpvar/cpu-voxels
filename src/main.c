@@ -9,6 +9,7 @@
 #include "ray.h"
 #include "ray-aabb.h"
 #include "orbit-camera.h"
+#include "voxel.h"
 
 #define TOTAL_THREADS 4
 #define ENABLE_THREADS
