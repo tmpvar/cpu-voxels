@@ -25,7 +25,7 @@
 
   static void voxel_brick_fill(voxel_brick brick, set_callback_t cb) {
     for (unsigned int x=0; x<BRICK_RADIUS; x++) {
-      for (unsigned int y=0; x<BRICK_RADIUS; y++) {
+      for (unsigned int y=0; y<BRICK_RADIUS; y++) {
         for (unsigned int z=0; z<BRICK_RADIUS; z++) {
           brick.voxels[x][y][z] = cb(x, y, z);
         }
