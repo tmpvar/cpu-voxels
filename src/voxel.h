@@ -110,7 +110,7 @@
         out[0] = ix;
         out[1] = iy;
         out[2] = iz;
-        return out;
+        return 1;
       }
 
       if(mx < my) {
