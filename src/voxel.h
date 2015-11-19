@@ -60,5 +60,77 @@
     brick->bounds_packet[5] = _mm_set1_ps(brick->bounds[1][2]);
   }
 
+  static int sign(const float a) {
+    return a < 0 ? -1 : a > 0 ? 1 : 0;
+  }
 
+  static float diff(const float s, const float ds) {
+    int is = (int)s;
+
+    int r = s - (s < 0 ? -1 + is : is);
+    return ds > 0 ? (1-r) / ds : r / -ds;
+  }
+
+  static int voxel_brick_traverse(
+    voxel_brick *brick,
+    const float ubx,
+    const float uby,
+    const float ubz,
+    const vec3 isect,
+    const vec3 rd,
+    const float density,
+    int *out)
+  {
+    float sx = sign(rd[0]);
+    float sy = sign(rd[1]);
+    float sz = sign(rd[2]);
+
+    float x = isect[0];
+    float y = isect[1];
+    float z = isect[2];
+
+    float mx = diff(x, rd[0]);
+    float my = diff(y, rd[1]);
+    float mz = diff(z, rd[2]);
+
+    float dx = sx / rd[0];
+    float dy = sy / rd[1];
+    float dz = sz / rd[2];
+
+    while (
+      x >= -rd[0] && y >= -rd[1] && z >= -rd[2] &&
+      x <= ubx && y <= uby && z <= ubz
+    ) {
+
+      unsigned int ix = (unsigned int)x;
+      unsigned int iy = (unsigned int)y;
+      unsigned int iz = (unsigned int)z;
+
+      if (brick->voxels[ix][iy][iz] > density) {
+        out[0] = ix;
+        out[1] = iy;
+        out[2] = iz;
+        return out;
+      }
+
+      if(mx < my) {
+        if(mx < mz) {
+          x += sx;
+          mx += dx;
+        } else {
+          z += sz;
+          mz += dz;
+        }
+      } else {
+        if(my < mz) {
+          y += sy;
+          my += dy;
+        } else {
+          z += sz;
+          mz += dz;
+        }
+      }
+    }
+    return 0;
+  }
 #endif
