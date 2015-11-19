@@ -3,8 +3,11 @@
   #include <string.h>
 
   #include "vec.h"
+  #include "aabb.h"
 
   #define BRICK_RADIUS 8
+  #define BRICK_HALF_RADIUS BRICK_RADIUS/2
+
   #define BRICK_LENGTH BRICK_RADIUS*BRICK_RADIUS*BRICK_RADIUS
   #define VOXEL_SIZE 0.01f
 
@@ -13,6 +16,7 @@
   typedef struct {
     float voxels[BRICK_RADIUS][BRICK_RADIUS][BRICK_RADIUS];
     vec3 center;
+    aabb bounds;
   } voxel_brick;
 
   void voxel_brick_set(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z, float v) {
@@ -35,6 +39,13 @@
 
   static float voxel_brick_get(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z) {
     return brick.voxels[x][y][z];
+  }
+
+  static void voxel_brick_position(voxel_brick brick, const vec3 center) {
+    brick.center = center;
+    vec3 corner = vec3f(VOXEL_SIZE * BRICK_HALF_RADIUS);
+    brick.bounds[0] = _mm_sub_ps(center, corner);
+    brick.bounds[1] = _mm_add_ps(center, corner);
   }
 
 #endif
