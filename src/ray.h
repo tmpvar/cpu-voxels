@@ -1,7 +1,7 @@
 #ifndef __RAY__
 #define __RAY__
 
-#include <3d.h>
+#include "vec.h"
 #include <immintrin.h>
 
 typedef struct ray_t

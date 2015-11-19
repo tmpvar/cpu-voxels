@@ -5,9 +5,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx -pthread")
 set(CMAKE_LINKER_FLAGS "-lpthread")
 
-# configure linmath
-include_directories(deps/linmath)
-
 # configure glfw
 set(GLFW_BUILD_EXAMPLES OFF)
 add_subdirectory(deps/glfw)

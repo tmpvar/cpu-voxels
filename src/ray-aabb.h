@@ -14,7 +14,7 @@
 
 #include "ray.h"
 #include "aabb.h"
-#include <3d.h>
+#include "vec.h"
 #include <xmmintrin.h>
 #include <smmintrin.h>
 #include <immintrin.h>

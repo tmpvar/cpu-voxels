@@ -1,6 +1,6 @@
 #ifndef __AABB__
 #define __AABB__
-  #include <3d.h>
+  #include "vec.h"
   typedef vec3 aabb[2];
 
   typedef vec3 aabb_packet[6];
