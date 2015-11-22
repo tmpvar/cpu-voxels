@@ -11,8 +11,13 @@
 #include "orbit-camera.h"
 #include "voxel.h"
 
-#define TOTAL_THREADS 4
 #define ENABLE_THREADS
+#ifdef ENABLE_THREADS
+  #define TOTAL_THREADS 7
+#else
+  #define TOTAL_THREADS 1
+#endif
+
 #define RENDER
 
 struct {
@@ -281,10 +286,12 @@ int main(void)
     dcol = planeYPosition - rda;
     drow = rdb - rda;
 
+    int i=0, bh = height;
 #ifdef ENABLE_THREADS
-    int bh = (height/TOTAL_THREADS);
-    for (int i=0; i<TOTAL_THREADS; i++) {
+    bh = (height/TOTAL_THREADS);
 
+    for (i; i<TOTAL_THREADS; i++) {
+#endif
       areas[i].dcol = dcol;
       areas[i].drow = drow;
       areas[i].pos = planeYPosition;
@@ -297,24 +304,12 @@ int main(void)
       areas[i].data = data;
       areas[i].render_id = i;
       areas[i].brick = &my_first_brick;
-
+#ifdef ENABLE_THREADS
       thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
     }
 
     thpool_wait(thpool);
 #else
-    areas[0].dcol = dcol;
-    areas[0].drow = drow;
-    areas[0].pos = planeYPosition;
-    areas[0].ro = ro;
-    areas[0].x = 0;
-    areas[0].y = 0;
-    areas[0].width = width;
-    areas[0].height = height;
-    areas[0].stride = stride;
-    areas[0].data = data;
-    areas[0].brick = &my_first_brick;
-
     render_screen_area((void *)(&areas[0]));
 #endif
 
