@@ -1,15 +1,17 @@
 #ifndef __VOXEL__
 #define __VOXEL__
   #include <string.h>
-
+  #include <math.h>
+  #include <float.h>
   #include "vec.h"
   #include "aabb.h"
 
   #define VOXEL_BRICK_WIDTH 8
   #define VOXEL_BRICK_HALF_WIDTH VOXEL_BRICK_WIDTH/2
   #define VOXEL_BRICK_LENGTH VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH
-  #define VOXEL_SIZE .1/VOXEL_BRICK_WIDTH
-  #define VOXEL_BRICK_SIZE VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE
+  #define VOXEL_SIZE 1
+  #define VOXEL_BRICK_HALF_SIZE VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE
+  #define VOXEL_BRICK_SIZE VOXEL_BRICK_WIDTH * VOXEL_SIZE
 
   typedef float (*set_callback_t)(const unsigned int x, const unsigned int y, const unsigned int z);
 
@@ -25,7 +27,7 @@
   }
 
   void voxel_brick_fill_constant(voxel_brick *brick, const float v) {
-    memset(brick->voxels, v, sizeof(VOXEL_BRICK_LENGTH));
+    memset(brick->voxels, v, sizeof(brick->voxels));
   }
 
   static void voxel_brick_fill(voxel_brick *brick, set_callback_t cb) {
@@ -71,42 +73,67 @@
     return ds > 0 ? (1-r) / ds : r / -ds;
   }
 
+  static float clamp(float x, float a, float b) {
+    return x < a ? a : (x > b ? b : x);
+  }
+
+  static float intbound(float s, float ds) {
+    if (ds < 0) {
+      return intbound(-s, -ds);
+    } else {
+      s = fmod(s, 1);
+      return (1-s)/ds;
+    }
+  }
+
+  // TODO: replace density with a callback?
   static int voxel_brick_traverse(
     voxel_brick *brick,
-    const float ubx,
-    const float uby,
-    const float ubz,
     const vec3 isect,
     const vec3 rd,
     const float density,
-    int *out)
-  {
-    float sx = sign(rd[0]);
-    float sy = sign(rd[1]);
-    float sz = sign(rd[2]);
+    int *out
+  ) {
 
     float x = isect[0];
     float y = isect[1];
     float z = isect[2];
 
-    float mx = diff(x, rd[0]);
-    float my = diff(y, rd[1]);
-    float mz = diff(z, rd[2]);
+    // // compute the starting voxel
+    int ix = clamp(floor(isect[0] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1);
+    int iy = clamp(floor(isect[1] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1);
+    int iz = clamp(floor(isect[2] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1);
 
-    float dx = sx / rd[0];
-    float dy = sy / rd[1];
-    float dz = sz / rd[2];
+    // compute the direction we will traverse through the brick
+    float isx = sign(rd[0]);
+    float isy = sign(rd[1]);
+    float isz = sign(rd[2]);
+
+    // find how far we need to go to get accross each axis
+    float dx = (x + (ix - isx) * VOXEL_SIZE) - x;
+    float dy = (y + (iy - isy) * VOXEL_SIZE) - y;
+    float dz = (z + (iz - isz) * VOXEL_SIZE) - z;
+
+    // compute the delta
+    float tdx = VOXEL_SIZE;
+    float tdy = VOXEL_SIZE;
+    float tdz = VOXEL_SIZE;
+
+    double tmp;
+    float fx = modf(x / VOXEL_SIZE, &tmp);
+    float fy = modf(y / VOXEL_SIZE, &tmp);
+    float fz = modf(z / VOXEL_SIZE, &tmp);
+    float mx = tdx * (1.0 - fx);
+    float my = tdy * (1.0 - fy);
+    float mz = tdz * (1.0 - fz);
 
     while (
-      x >= -rd[0] && y >= -rd[1] && z >= -rd[2] &&
-      x <= ubx && y <= uby && z <= ubz
+      ix >= 0 && ix < VOXEL_BRICK_WIDTH &&
+      iy >= 0 && iy < VOXEL_BRICK_WIDTH &&
+      iz >= 0 && iz < VOXEL_BRICK_WIDTH
     ) {
 
-      unsigned int ix = (unsigned int)x;
-      unsigned int iy = (unsigned int)y;
-      unsigned int iz = (unsigned int)z;
-
-      if (brick->voxels[ix][iy][iz] > density) {
+      if (brick->voxels[ix][iy][iz]) {
         out[0] = ix;
         out[1] = iy;
         out[2] = iz;
@@ -115,22 +142,24 @@
 
       if(mx < my) {
         if(mx < mz) {
-          x += sx;
-          mx += dx;
+          ix += isx;
+          mx += tdx;
         } else {
-          z += sz;
-          mz += dz;
+          iz += isz;
+          mz += tdz;
         }
       } else {
         if(my < mz) {
-          y += sy;
-          my += dy;
+          iy += isy;
+          my += tdy;
         } else {
-          z += sz;
-          mz += dz;
+          iz += isz;
+          mz += tdz;
         }
       }
     }
+
+    out[0] = out[1] = out[2] = -1.0;
     return 0;
   }
 #endif

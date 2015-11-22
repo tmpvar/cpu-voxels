@@ -20,6 +20,13 @@ add_executable(
     ${GLFW_LIBRARIES}
 )
 
+add_executable(
+    test
+    src/test.c
+    deps/thpool/thpool.c
+    ${GLFW_LIBRARIES}
+)
+
 target_link_libraries(
     cpuvoxels
     glfw
