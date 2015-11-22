@@ -80,6 +80,12 @@ typedef struct {
   voxel_brick *brick;
 } screen_area;
 
+float brick_fill_odd(const unsigned int x, const unsigned int y, const unsigned int z) {
+ return z < VOXEL_BRICK_WIDTH-1 ? 100.0f : 0.0f;
+  //return x > 0 && x < VOXEL_BRICK_WIDTH-1 && y > 0 && y < VOXEL_BRICK_WIDTH-1 && z > 0 && z < VOXEL_BRICK_WIDTH-1 ? 100.0f : 0;//(x%2 == 0 && y%2 == 0 && z%2 == 0) ? 100.0f : 0.0f;
+  // return x%2 && y%2 && z%2 ? 100.f : 0.0f;
+}
+
 void render_screen_area(void *args) {
   ray3 ray;
   float t = 0;
@@ -105,7 +111,7 @@ void render_screen_area(void *args) {
   vec3 center = c->brick->center;
   vec3 m;
   // float r = (c->bounds[1][0] - center[0]) * 0.97f;
-  float r = VOXEL_BRICK_SIZE * 0.97f;
+  float r = VOXEL_BRICK_HALF_SIZE * 0.97f;
   int result;
   int x, y;
 
@@ -134,8 +140,13 @@ void render_screen_area(void *args) {
       for (int j=0; j<4; j++) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
+        int cr = floor(((x+j)/(float)width) * 255);
+        int cg = floor((y/(float)height) * 255);
+        int cb = 0;
+
         if (result & (1<<j)) {
-          o = (ro + dir[j] * vec3f(m[j])) - center;
+          vec3 isect = ro + dir[j] * vec3f(m[j]);
+          o = isect - c->brick->center;
 
           for (int k=0; k<3; k++) {
             if (fabsf(o[k]) >= r) {
@@ -148,23 +159,38 @@ void render_screen_area(void *args) {
           float sum = fabsf(normal[0]) + fabsf(normal[1]) + fabsf(normal[2]);
 
           if (sum == 3) {
-            data[where+0] = 140;//(int)(normal[0] * 255 + 127);
-            data[where+1] = 140;//(int)(normal[1] * 255 + 127);
-            data[where+2] = 140;//(int)(normal[2] * 255 + 127);
+            cr = cg = cb = 140;
           } else if (sum == 2) {
-            data[where+0] = 160;//(int)(normal[0] * 255 + 127);
-            data[where+1] = 160;//(int)(normal[1] * 255 + 127);
-            data[where+2] = 160;//(int)(normal[2] * 255 + 127);
+            cr = cg = cb = 160;
           } else {
-            data[where+0] = 0;//(int)(o[0] * 255 + 127);
-            data[where+1] = 0;//(int)(o[1] * 255 + 127);
-            data[where+2] = 0;//(int)(o[2] * 255 + 127);
+            int voxel_pos[3] = { 0, 0, 0 };
+            int found = voxel_brick_traverse(
+              c->brick,
+              isect,
+              dir[j],
+              1.0f,
+              voxel_pos
+            );
+
+            if (found) {
+
+              // cr = (int)(voxel_pos[0] / 4.0f * 255.0f);//(int)(normal[0] * 255 + 127);//(int)(o[0] * 255 + 127);
+              // cg = (int)(voxel_pos[1] / 4.0f * 255.0f);//(int)(normal[1] * 255 + 127);//(int)(o[1] * 255 + 127);
+              // cb = (int)(voxel_pos[2] / 4.0f * 255.0f);//(int)(normal[2] * 255 + 127);//(int)(o[2] * 255 + 127);
+              cr = voxel_pos[0] * 255 + 127;
+              cg = voxel_pos[1] * 255 + 127;
+              cb = voxel_pos[2] * 255 + 127;
+            } else {
+              cr = 0;//fmaxf(0, cr - 30);//(int)(o[0] * 255 + 127);
+              cg = 0;//fmaxf(0, cg - 30);//(int)(o[1] * 255 + 127);
+              cb = 0;
+            }
           }
-        } else {
-          data[where+0] = 0;
-          data[where+1] = 0;
-          data[where+2] = 0;
         }
+
+        data[where+0] = cr;
+        data[where+1] = cg;
+        data[where+2] = cb;
       }
     }
     planeYPosition += dcol;
@@ -195,7 +221,7 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = vec3_create(0.0, 0.0, -1.0);
+  vec3 eye = vec3_create(0.0, 0.0, 60.);
   vec3 center = vec3_create(0.0, 0.0, 0.0 );
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
@@ -209,12 +235,7 @@ int main(void)
   int total = dw*dh*stride;
   uint8_t *data = malloc(total);
 
-  aabb bounds = {
-    {-.1, -.1, -.1},
-    { .1,  .1,  .1}
-  };
-
-    vec3 ro; //, rd;
+  vec3 ro; //, rd;
   mat4 m4inverted, view;
   mat4 projection;
   mat4_perspective(
@@ -237,8 +258,11 @@ int main(void)
   float start = glfwGetTime();
   int fps = 0;
   voxel_brick my_first_brick;
-  vec3 zero = vec3f(0.0f);
-  voxel_brick_position(&my_first_brick, zero);
+  // TODO: make this work when the brick lb corner is not oriented at 0,0,0
+  voxel_brick_position(&my_first_brick, vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE));
+  // voxel_brick_fill_constant(&my_first_brick, 100.0f);
+  voxel_brick_fill(&my_first_brick, &brick_fill_odd);
+  // my_first_brick.voxels[0][VOXEL_BRICK_WIDTH-1][VOXEL_BRICK_WIDTH-1] = 100.0f;
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
@@ -310,7 +334,7 @@ int main(void)
 
     thpool_wait(thpool);
 #else
-    render_screen_area((void *)(&areas[0]));
+    render_screen_area((void *)(&areas[i]));
 #endif
 
 #ifdef RENDER
