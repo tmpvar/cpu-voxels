@@ -56,4 +56,28 @@ static inline int ray_isect_packet(ray_packet3 packet, aabb_packet b, vec3 *m) {
   return _mm_movemask_ps(lmax >= _mm_max_ps(zero, lmin));
 }
 
+uint8_t ray_isect(ray3 *r, aabb b, float *m) {
+  float tx1 = (b[0][0] - r->origin[0]) * r->invdir[0];
+  float tx2 = (b[1][0] - r->origin[0]) * r->invdir[0];
+
+  float tmin = fminf(tx1, tx2);
+  float tmax = fmaxf(tx1, tx2);
+
+  float ty1 = (b[0][1] - r->origin[1]) * r->invdir[1];
+  float ty2 = (b[1][1] - r->origin[1]) * r->invdir[1];
+
+  tmin = fmaxf(tmin, fminf(ty1, ty2));
+  tmax = fminf(tmax, fmaxf(ty1, ty2));
+
+  float tz1 = (b[0][2] - r->origin[2])*r -> invdir[2];
+  float tz2 = (b[1][2] - r->origin[2])*r -> invdir[2];
+
+  tmin = fmaxf(tmin, fminf(tz1, tz2));
+  tmax = fminf(tmax, fmaxf(tz1, tz2));
+
+  *m = tmin;
+
+  return tmax >= fmaxf(0.0, tmin);
+}
+
 #endif
