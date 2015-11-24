@@ -81,9 +81,9 @@ typedef struct {
 } screen_area;
 
 float brick_fill(const unsigned int x, const unsigned int y, const unsigned int z) {
-  if (x == VOXEL_BRICK_HALF_SIZE ||
-      y == VOXEL_BRICK_HALF_SIZE ||
-      z == VOXEL_BRICK_HALF_SIZE
+  if (x == VOXEL_BRICK_HALF_WIDTH ||
+      y == VOXEL_BRICK_HALF_WIDTH ||
+      z == VOXEL_BRICK_HALF_WIDTH
   ) {
     return 100.0f;
   }
@@ -223,7 +223,7 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_SIZE * 4);
+  vec3 eye = vec3_create(0.0f, 0.0f, VOXEL_BRICK_SIZE * 4);
   vec3 center = vec3f(0.0f);
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 

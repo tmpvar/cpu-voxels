@@ -7,11 +7,10 @@
   #include "aabb.h"
 
   #define VOXEL_BRICK_WIDTH 8
-  #define VOXEL_BRICK_HALF_WIDTH VOXEL_BRICK_WIDTH/2
-  #define VOXEL_BRICK_LENGTH VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH
-  #define VOXEL_SIZE 1
-  #define VOXEL_BRICK_HALF_SIZE VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE
-  #define VOXEL_BRICK_SIZE VOXEL_BRICK_WIDTH * VOXEL_SIZE
+  #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
+  #define VOXEL_SIZE 0.01f
+  #define VOXEL_BRICK_HALF_SIZE (VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE)
+  #define VOXEL_BRICK_SIZE (VOXEL_BRICK_WIDTH * VOXEL_SIZE)
 
   typedef float (*set_callback_t)(const unsigned int x, const unsigned int y, const unsigned int z);
 
@@ -49,9 +48,9 @@
     brick->center = center;
 
     // create a normal aabb
-    vec3 corner = vec3f(VOXEL_SIZE * VOXEL_BRICK_HALF_WIDTH);
-    brick->bounds[0] = _mm_sub_ps(center, corner);
-    brick->bounds[1] = _mm_add_ps(center, corner);
+    vec3 corner = vec3f(VOXEL_BRICK_HALF_SIZE);
+    brick->bounds[0] = center - corner;
+    brick->bounds[1] = center + corner;
 
     // create an aabb packet
     brick->bounds_packet[0] = _mm_set1_ps(brick->bounds[0][0]);
@@ -63,7 +62,7 @@
   }
 
   static inline float sign(const float a) {
-    return a < 0 ? -1.0f : 1.0f;
+    return a < 0 ? -VOXEL_SIZE : VOXEL_SIZE;
   }
 
   static inline float mod(const float value, const float modulus) {
@@ -76,8 +75,8 @@
       ds = -ds;
     }
 
-    s = mod(s, 1);
-    return (1-s)/ds;
+    s = mod(s, VOXEL_SIZE);
+    return (VOXEL_SIZE-s)/ds;
   }
 
   // TODO: replace density with a callback?
@@ -89,9 +88,9 @@
     int *out
   ) {
 
-    float rdx = rd[0];
-    float rdy = rd[1];
-    float rdz = rd[2];
+    float rdx = rd[0] * VOXEL_SIZE;
+    float rdy = rd[1] * VOXEL_SIZE;
+    float rdz = rd[2] * VOXEL_SIZE;
 
     float sx = sign(rdx);
     float sy = sign(rdy);
@@ -114,14 +113,14 @@
       x >= 0 &&
       y >= 0 &&
       z >= 0 &&
-      x <= VOXEL_BRICK_WIDTH &&
-      y <= VOXEL_BRICK_WIDTH &&
-      z <= VOXEL_BRICK_WIDTH
+      x < VOXEL_BRICK_SIZE &&
+      y < VOXEL_BRICK_SIZE &&
+      z < VOXEL_BRICK_SIZE
     ) {
 
-      ix = floor(x);
-      iy = floor(y);
-      iz = floor(z);
+      ix = floor(x / VOXEL_SIZE);
+      iy = floor(y / VOXEL_SIZE);
+      iz = floor(z / VOXEL_SIZE);
 
       if (brick->voxels[ix][iy][iz] > density) {
         out[0] = ix;
