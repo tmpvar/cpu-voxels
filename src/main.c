@@ -87,8 +87,17 @@ float brick_fill(const unsigned int x, const unsigned int y, const unsigned int 
   ) {
     return 100.0f;
   }
-  //return x > 0 && x < VOXEL_BRICK_WIDTH-1 && y > 0 && y < VOXEL_BRICK_WIDTH-1 && z > 0 && z < VOXEL_BRICK_WIDTH-1 ? 100.0f : 0;//(x%2 == 0 && y%2 == 0 && z%2 == 0) ? 100.0f : 0.0f;
-  // return x%2 && y%2 && z%2 ? 100.f : 0.0f;
+
+  float dx = x - VOXEL_BRICK_HALF_WIDTH;
+  float dy = y - VOXEL_BRICK_HALF_WIDTH;
+  float dz = z - VOXEL_BRICK_HALF_WIDTH;
+
+  float d = sqrtf(dx*dx + dy*dy + dz*dz);
+  if (d < VOXEL_BRICK_HALF_WIDTH) {
+    return 100.0f;
+  }
+  // return x > 0 && x < VOXEL_BRICK_WIDTH-1 && y > 0 && y < VOXEL_BRICK_WIDTH-1 && z > 0 && z < VOXEL_BRICK_WIDTH-1 ? 100.0f : 0;//(x%2 == 0 && y%2 == 0 && z%2 == 0) ? 100.0f : 0.0f;
+
  return 0.0f;
 }
 
@@ -113,11 +122,8 @@ void render_screen_area(void *args) {
   packet.origin[2] = vec3f(ro[2]);
   vec3 planeYPosition = dcol * vec3f(c->y) + c->pos;
   vec3 invdir[4], dir[4];
-  // vec3 center = aabb_center(c->bounds);
-  vec3 center = c->brick->center;
   vec3 m;
-  // float r = (c->bounds[1][0] - center[0]) * 0.97f;
-  float r = VOXEL_BRICK_HALF_SIZE * 0.97f;
+  float r = VOXEL_BRICK_HALF_SIZE * 0.99f;
   int result;
   int x, y;
 
@@ -164,32 +170,31 @@ void render_screen_area(void *args) {
 
           float sum = fabsf(normal[0]) + fabsf(normal[1]) + fabsf(normal[2]);
 
-          if (sum == 3) {
-            cr = cg = cb = 140;
-          } else if (sum == 2) {
-            cr = cg = cb = 160;
-          } else {
-            int voxel_pos[3] = { 0, 0, 0 };
-            int found = voxel_brick_traverse(
-              c->brick,
-              isect,
-              vec3_norm(dir[j]),
-              1.0f,
-              voxel_pos
-            );
+          int voxel_pos[3] = { 0, 0, 0 };
+          int found = voxel_brick_traverse(
+            c->brick,
+            isect,
+            vec3_norm(dir[j]),
+            1.0f,
+            voxel_pos
+          );
 
-            if (found) {
-              cr = (int)((voxel_pos[0] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
-              cg = (int)((voxel_pos[1] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
-              cb = (int)((voxel_pos[2] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
-            } else {
-              cr = fmaxf(0, cr - 30);
-              cg = fmaxf(0, cg - 30);
-              cb = 0;
-            }
+          if (found) {
+            cr = (int)((voxel_pos[0] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+            cg = (int)((voxel_pos[1] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+            cb = (int)((voxel_pos[2] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+          } else {
+            cr = fmaxf(0, cr - 20);
+            cg = fmaxf(0, cg - 20);
+            cb = fmaxf(0, cb - 20);
+          }
+
+          if (sum >= 2) {
+            cr = fmaxf(0, cr - 20);
+            cg = fmaxf(0, cg - 20);
+            cb = fmaxf(0, cb - 20);
           }
         }
-
         data[where+0] = cr;
         data[where+1] = cg;
         data[where+2] = cb;

@@ -6,9 +6,9 @@
   #include "vec.h"
   #include "aabb.h"
 
-  #define VOXEL_BRICK_WIDTH 8
+  #define VOXEL_BRICK_WIDTH 32
   #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
-  #define VOXEL_SIZE 0.01f
+  #define VOXEL_SIZE 0.001f
   #define VOXEL_BRICK_HALF_SIZE (VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE)
   #define VOXEL_BRICK_SIZE (VOXEL_BRICK_WIDTH * VOXEL_SIZE)
 
@@ -110,9 +110,9 @@
     int ix, iy, iz;
 
     while (
-      x >= 0 &&
-      y >= 0 &&
-      z >= 0 &&
+      x > 0 &&
+      y > 0 &&
+      z > 0 &&
       x < VOXEL_BRICK_SIZE &&
       y < VOXEL_BRICK_SIZE &&
       z < VOXEL_BRICK_SIZE
