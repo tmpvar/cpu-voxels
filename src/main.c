@@ -69,7 +69,7 @@ typedef struct {
   int x;
   int y;
   int width;
-  int height;
+  int height, screen_height;
   int stride;
   int render_id;
   vec3 pos;
@@ -80,10 +80,16 @@ typedef struct {
   voxel_brick *brick;
 } screen_area;
 
-float brick_fill_odd(const unsigned int x, const unsigned int y, const unsigned int z) {
- return z < VOXEL_BRICK_WIDTH-1 ? 100.0f : 0.0f;
+float brick_fill(const unsigned int x, const unsigned int y, const unsigned int z) {
+  if (x == VOXEL_BRICK_HALF_WIDTH ||
+      y == VOXEL_BRICK_HALF_WIDTH ||
+      z == VOXEL_BRICK_HALF_WIDTH
+  ) {
+    return 100.0f;
+  }
   //return x > 0 && x < VOXEL_BRICK_WIDTH-1 && y > 0 && y < VOXEL_BRICK_WIDTH-1 && z > 0 && z < VOXEL_BRICK_WIDTH-1 ? 100.0f : 0;//(x%2 == 0 && y%2 == 0 && z%2 == 0) ? 100.0f : 0.0f;
   // return x%2 && y%2 && z%2 ? 100.f : 0.0f;
+ return 0.0f;
 }
 
 void render_screen_area(void *args) {
@@ -141,7 +147,7 @@ void render_screen_area(void *args) {
         unsigned long where = y * width * stride + (x + j) * stride;
 
         int cr = floor(((x+j)/(float)width) * 255);
-        int cg = floor((y/(float)height) * 255);
+        int cg = floor((y/(float)c->screen_height) * 255);
         int cb = 0;
 
         if (result & (1<<j)) {
@@ -167,22 +173,18 @@ void render_screen_area(void *args) {
             int found = voxel_brick_traverse(
               c->brick,
               isect,
-              dir[j],
+              vec3_norm(dir[j]),
               1.0f,
               voxel_pos
             );
 
             if (found) {
-
-              // cr = (int)(voxel_pos[0] / 4.0f * 255.0f);//(int)(normal[0] * 255 + 127);//(int)(o[0] * 255 + 127);
-              // cg = (int)(voxel_pos[1] / 4.0f * 255.0f);//(int)(normal[1] * 255 + 127);//(int)(o[1] * 255 + 127);
-              // cb = (int)(voxel_pos[2] / 4.0f * 255.0f);//(int)(normal[2] * 255 + 127);//(int)(o[2] * 255 + 127);
-              cr = voxel_pos[0] * 255 + 127;
-              cg = voxel_pos[1] * 255 + 127;
-              cb = voxel_pos[2] * 255 + 127;
+              cr = (int)((voxel_pos[0] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+              cg = (int)((voxel_pos[1] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+              cb = (int)((voxel_pos[2] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
             } else {
-              cr = 0;//fmaxf(0, cr - 30);//(int)(o[0] * 255 + 127);
-              cg = 0;//fmaxf(0, cg - 30);//(int)(o[1] * 255 + 127);
+              cr = fmaxf(0, cr - 30);
+              cg = fmaxf(0, cg - 30);
               cb = 0;
             }
           }
@@ -221,8 +223,8 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = vec3_create(0.0, 0.0, 60.);
-  vec3 center = vec3_create(0.0, 0.0, 0.0 );
+  vec3 eye = vec3_create(VOXEL_BRICK_HALF_WIDTH, VOXEL_BRICK_HALF_WIDTH, 30.);
+  vec3 center = vec3_create(VOXEL_BRICK_HALF_WIDTH, VOXEL_BRICK_HALF_WIDTH, 0.0 );
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
   orbit_camera_init(eye, center, up);
@@ -261,7 +263,7 @@ int main(void)
   // TODO: make this work when the brick lb corner is not oriented at 0,0,0
   voxel_brick_position(&my_first_brick, vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE));
   // voxel_brick_fill_constant(&my_first_brick, 100.0f);
-  voxel_brick_fill(&my_first_brick, &brick_fill_odd);
+  voxel_brick_fill(&my_first_brick, &brick_fill);
   // my_first_brick.voxels[0][VOXEL_BRICK_WIDTH-1][VOXEL_BRICK_WIDTH-1] = 100.0f;
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -324,6 +326,7 @@ int main(void)
       areas[i].y = i*bh;
       areas[i].width = width;
       areas[i].height = areas[i].y + (int)(bh);
+      areas[i].screen_height = (int)(height);
       areas[i].stride = stride;
       areas[i].data = data;
       areas[i].render_id = i;

@@ -62,8 +62,8 @@
     brick->bounds_packet[5] = _mm_set1_ps(brick->bounds[1][2]);
   }
 
-  static int sign(const float a) {
-    return a < 0 ? -1 : a > 0 ? 1 : 0;
+  static float sign(const float a) {
+    return a < 0 ? -1.0f : a > 0.0f ? 1.0f : FLT_MAX;
   }
 
   static float diff(const float s, const float ds) {
@@ -77,11 +77,15 @@
     return x < a ? a : (x > b ? b : x);
   }
 
+  static float mod(const float value, const float modulus) {
+    return fmod(fmod(value, modulus) + modulus, modulus);
+  }
+
   static float intbound(float s, float ds) {
     if (ds < 0) {
       return intbound(-s, -ds);
     } else {
-      s = fmod(s, 1);
+      s = mod(s, 1);
       return (1-s)/ds;
     }
   }
@@ -95,45 +99,38 @@
     int *out
   ) {
 
-    float x = isect[0];
-    float y = isect[1];
-    float z = isect[2];
+    float rdx = +(rd[0]);
+    float rdy = +(rd[1]);
+    float rdz = +(rd[2]);
 
-    // // compute the starting voxel
-    int ix = clamp(floor(isect[0] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1);
-    int iy = clamp(floor(isect[1] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1);
-    int iz = clamp(floor(isect[2] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1);
+    float sx = sign(rdx);
+    float sy = sign(rdy);
+    float sz = sign(rdz);
 
-    // compute the direction we will traverse through the brick
-    float isx = sign(rd[0]);
-    float isy = sign(rd[1]);
-    float isz = sign(rd[2]);
+    float x = isect[0] + rd[0];//clamp(isect[0], 0, ubx-1));
+    float y = isect[1] + rd[1];//clamp(isect[1], 0, uby-1));
+    float z = isect[2] + rd[2];//clamp(isect[2], 0, ubz-1));
 
-    // find how far we need to go to get accross each axis
-    float dx = (x + (ix - isx) * VOXEL_SIZE) - x;
-    float dy = (y + (iy - isy) * VOXEL_SIZE) - y;
-    float dz = (z + (iz - isz) * VOXEL_SIZE) - z;
+    float mx = intbound(x, rdx);
+    float my = intbound(y, rdy);
+    float mz = intbound(z, rdz);
 
-    // compute the delta
-    float tdx = VOXEL_SIZE;
-    float tdy = VOXEL_SIZE;
-    float tdz = VOXEL_SIZE;
+    float dx = +(sx/rdx);
+    float dy = +(sy/rdy);
+    float dz = +(sz/rdz);
 
-    double tmp;
-    float fx = modf(x / VOXEL_SIZE, &tmp);
-    float fy = modf(y / VOXEL_SIZE, &tmp);
-    float fz = modf(z / VOXEL_SIZE, &tmp);
-    float mx = tdx * (1.0 - fx);
-    float my = tdy * (1.0 - fy);
-    float mz = tdz * (1.0 - fz);
+    // TODO: handle NaN
 
     while (
-      ix >= 0 && ix < VOXEL_BRICK_WIDTH &&
-      iy >= 0 && iy < VOXEL_BRICK_WIDTH &&
-      iz >= 0 && iz < VOXEL_BRICK_WIDTH
+      x >= 0 && y >= 0 && z >= 0 &&
+      x <= VOXEL_BRICK_WIDTH && y <= VOXEL_BRICK_WIDTH && z <= VOXEL_BRICK_WIDTH
     ) {
 
-      if (brick->voxels[ix][iy][iz]) {
+      int ix = floor(x);
+      int iy = floor(y);
+      int iz = floor(z);
+
+      if (brick->voxels[ix][iy][iz] > density) {
         out[0] = ix;
         out[1] = iy;
         out[2] = iz;
@@ -142,24 +139,34 @@
 
       if(mx < my) {
         if(mx < mz) {
-          ix += isx;
-          mx += tdx;
+          out[0] = -sx;
+          out[1] = out[2] = 0;
+
+          x += sx;
+          mx += dx;
         } else {
-          iz += isz;
-          mz += tdz;
+          out[2] = -sz;
+          out[0] = out[1] = 0;
+
+          z += sz;
+          mz += dz;
         }
       } else {
         if(my < mz) {
-          iy += isy;
-          my += tdy;
+          out[1] = -sy;
+          out[0] = out[2] = 0;
+
+          y += sy;
+          my += dy;
         } else {
-          iz += isz;
-          mz += tdz;
+          out[2] = -sz;
+          out[0] = out[1] = 0;
+
+          z += sz;
+          mz += dz;
         }
       }
     }
-
-    out[0] = out[1] = out[2] = -1.0;
     return 0;
   }
 #endif
