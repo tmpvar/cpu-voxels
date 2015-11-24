@@ -41,11 +41,6 @@ int main() {
     vec3 isect = r.origin + rd * vec3f(t);
     printf("isect: (%f, %f, %f)\n", isect[0], isect[1], isect[2]);
 
-    printf("voxel cell: (%i, %i, %i)\n",
-      (int)clamp(floor(isect[0] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1),
-      (int)clamp(floor(isect[1] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1),
-      (int)clamp(floor(isect[2] / VOXEL_SIZE), 0, VOXEL_BRICK_WIDTH-1)
-    );
 
     int voxel_pos[3];
     int found = voxel_brick_traverse(

@@ -81,7 +81,7 @@
   }
 
   // TODO: replace density with a callback?
-  static inline int voxel_brick_traverse(
+  static int voxel_brick_traverse(
     voxel_brick *brick,
     const vec3 isect,
     const vec3 rd,
@@ -97,9 +97,9 @@
     float sy = sign(rdy);
     float sz = sign(rdz);
 
-    float x = isect[0] + rdx;
-    float y = isect[1] + rdy;
-    float z = isect[2] + rdz;
+    float x = (isect[0] - brick->bounds[0][0]) + rdx;
+    float y = (isect[1] - brick->bounds[0][1]) + rdy;
+    float z = (isect[2] - brick->bounds[0][2]) + rdz;
 
     float mx = intbound(x, rdx);
     float my = intbound(y, rdy);
@@ -111,12 +111,12 @@
     int ix, iy, iz;
 
     while (
-      x >= brick->bounds[0][0] &&
-      y >= brick->bounds[0][1] &&
-      z >= brick->bounds[0][2] &&
-      x <= brick->bounds[1][0] &&
-      y <= brick->bounds[1][1] &&
-      z <= brick->bounds[1][2]
+      x >= 0 &&
+      y >= 0 &&
+      z >= 0 &&
+      x <= VOXEL_BRICK_WIDTH &&
+      y <= VOXEL_BRICK_WIDTH &&
+      z <= VOXEL_BRICK_WIDTH
     ) {
 
       ix = floor(x);
