@@ -39,7 +39,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
   }
 }
 
-
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
   mouse.down = action == GLFW_PRESS;
@@ -77,7 +76,7 @@ typedef struct {
   vec3 drow;
   vec3 ro;
   vec4 color;
-  voxel_brick *brick;
+  voxel_brick brick;
 } screen_area;
 
 float brick_fill(const unsigned int x, const unsigned int y, const unsigned int z) {
@@ -264,10 +263,10 @@ int main(void)
   glGenTextures(1, texture);
   float start = glfwGetTime();
   int fps = 0;
-  voxel_brick my_first_brick;
+  voxel_brick my_first_brick = voxel_brick_create();
   // TODO: make this work when the brick lb corner is not oriented at 0,0,0
-  voxel_brick_position(&my_first_brick, vec3f(0.0f));
-  voxel_brick_fill(&my_first_brick, &brick_fill);
+  voxel_brick_position(my_first_brick, vec3f(0.0f));
+  voxel_brick_fill(my_first_brick, &brick_fill);
 
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -334,7 +333,7 @@ int main(void)
       areas[i].stride = stride;
       areas[i].data = data;
       areas[i].render_id = i;
-      areas[i].brick = &my_first_brick;
+      areas[i].brick = my_first_brick;
 #ifdef ENABLE_THREADS
       thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
     }

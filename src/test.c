@@ -6,10 +6,11 @@
 
 int main() {
 
-  voxel_brick brick;
+  voxel_brick brick = voxel_brick_create();
+
   vec3 center = vec3f(VOXEL_BRICK_HALF_SIZE);
-  voxel_brick_position(&brick, center);
-  voxel_brick_fill_constant(&brick, 0.0f);
+  voxel_brick_position(brick, center);
+  voxel_brick_fill_constant(brick, 0.0f);
   voxel_brick_set(
     &brick,
     VOXEL_BRICK_WIDTH-1,
@@ -18,9 +19,9 @@ int main() {
     100.0f
   );
 
-  voxel_brick_fill_constant(&brick, 0.0f);
+  voxel_brick_fill_constant(brick, 0.0f);
   voxel_brick_set(
-    &brick,
+    brick,
     VOXEL_BRICK_HALF_WIDTH-1,
     VOXEL_BRICK_HALF_WIDTH-1,
     VOXEL_BRICK_HALF_WIDTH-1,
@@ -35,7 +36,7 @@ int main() {
 
   float t = 0;
 
-  uint8_t result = ray_isect(&r, brick.bounds, &t);
+  uint8_t result = ray_isect(&r, brick->bounds, &t);
 
   if (result) {
     vec3 isect = r.origin + rd * vec3f(t);

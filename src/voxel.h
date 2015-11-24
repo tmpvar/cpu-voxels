@@ -6,7 +6,7 @@
   #include "vec.h"
   #include "aabb.h"
 
-  #define VOXEL_BRICK_WIDTH 32
+  #define VOXEL_BRICK_WIDTH 512
   #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
   #define VOXEL_SIZE 0.001f
   #define VOXEL_BRICK_HALF_SIZE (VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE)
@@ -15,35 +15,46 @@
   typedef float (*set_callback_t)(const unsigned int x, const unsigned int y, const unsigned int z);
 
   typedef struct {
-    float voxels[VOXEL_BRICK_WIDTH][VOXEL_BRICK_WIDTH][VOXEL_BRICK_WIDTH];
+    float *voxels;//[VOXEL_BRICK_WIDTH][VOXEL_BRICK_WIDTH][VOXEL_BRICK_WIDTH];
     vec3 center;
     aabb bounds;
     aabb_packet bounds_packet;
-  } voxel_brick;
+  } *voxel_brick, voxel_brick_t;
 
-  void voxel_brick_set(voxel_brick *brick, const unsigned int x, const unsigned int y, const unsigned int z, float v) {
-    brick->voxels[x][y][z] = v;
+  void voxel_brick_set(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z, float v) {
+    brick->voxels[x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z] = v;
   }
 
-  void voxel_brick_fill_constant(voxel_brick *brick, const float v) {
-    memset(brick->voxels, v, sizeof(brick->voxels));
+  voxel_brick voxel_brick_create() {
+    voxel_brick out = (voxel_brick)malloc(sizeof(voxel_brick_t));
+    // begin memory allocation
+//    out->voxels = malloc(
+    out->voxels = (float *)malloc(sizeof(float) * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH);
+
+
+    //    out->voxels = (float *)malloc(sizeof(float) * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH);
+    return out;
   }
 
-  static void voxel_brick_fill(voxel_brick *brick, set_callback_t cb) {
+  void voxel_brick_fill_constant(voxel_brick brick, const float v) {
+    memset(brick->voxels, v, sizeof(float) * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH);
+  }
+
+  static void voxel_brick_fill(voxel_brick brick, set_callback_t cb) {
     for (unsigned int x=0; x<VOXEL_BRICK_WIDTH; x++) {
       for (unsigned int y=0; y<VOXEL_BRICK_WIDTH; y++) {
         for (unsigned int z=0; z<VOXEL_BRICK_WIDTH; z++) {
-          brick->voxels[x][y][z] = cb(x, y, z);
+          voxel_brick_set(brick, x, y, z, cb(x, y, z));
         }
       }
     }
   }
 
-  static float voxel_brick_get(voxel_brick *brick, const unsigned int x, const unsigned int y, const unsigned int z) {
-    return brick->voxels[x][y][z];
+  static float voxel_brick_get(voxel_brick brick, const int x, const int y, const int z) {
+    return brick->voxels[x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z];
   }
 
-  static void voxel_brick_position(voxel_brick *brick, const vec3 center) {
+  static void voxel_brick_position(voxel_brick brick, const vec3 center) {
     // position the brick in space
     brick->center = center;
 
@@ -81,7 +92,7 @@
 
   // TODO: replace density with a callback?
   static int voxel_brick_traverse(
-    voxel_brick *brick,
+    voxel_brick brick,
     const vec3 isect,
     const vec3 rd,
     const float density,
@@ -122,7 +133,7 @@
       iy = floor(y / VOXEL_SIZE);
       iz = floor(z / VOXEL_SIZE);
 
-      if (brick->voxels[ix][iy][iz] > density) {
+      if (voxel_brick_get(brick, ix, iy, iz) > density) {
         out[0] = ix;
         out[1] = iy;
         out[2] = iz;
