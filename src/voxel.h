@@ -62,36 +62,26 @@
     brick->bounds_packet[5] = _mm_set1_ps(brick->bounds[1][2]);
   }
 
-  static float sign(const float a) {
-    return a < 0 ? -1.0f : a > 0.0f ? 1.0f : FLT_MAX;
+  static inline float sign(const float a) {
+    return a < 0 ? -1.0f : 1.0f;
   }
 
-  static float diff(const float s, const float ds) {
-    int is = (int)s;
-
-    int r = s - (s < 0 ? -1 + is : is);
-    return ds > 0 ? (1-r) / ds : r / -ds;
-  }
-
-  static float clamp(float x, float a, float b) {
-    return x < a ? a : (x > b ? b : x);
-  }
-
-  static float mod(const float value, const float modulus) {
+  static inline float mod(const float value, const float modulus) {
     return fmod(fmod(value, modulus) + modulus, modulus);
   }
 
-  static float intbound(float s, float ds) {
+  static inline float intbound(float s, float ds) {
     if (ds < 0) {
-      return intbound(-s, -ds);
-    } else {
-      s = mod(s, 1);
-      return (1-s)/ds;
+      s = -s;
+      ds = -ds;
     }
+
+    s = mod(s, 1);
+    return (1-s)/ds;
   }
 
   // TODO: replace density with a callback?
-  static int voxel_brick_traverse(
+  static inline int voxel_brick_traverse(
     voxel_brick *brick,
     const vec3 isect,
     const vec3 rd,
@@ -99,36 +89,39 @@
     int *out
   ) {
 
-    float rdx = +(rd[0]);
-    float rdy = +(rd[1]);
-    float rdz = +(rd[2]);
+    float rdx = rd[0];
+    float rdy = rd[1];
+    float rdz = rd[2];
 
     float sx = sign(rdx);
     float sy = sign(rdy);
     float sz = sign(rdz);
 
-    float x = isect[0] + rd[0];//clamp(isect[0], 0, ubx-1));
-    float y = isect[1] + rd[1];//clamp(isect[1], 0, uby-1));
-    float z = isect[2] + rd[2];//clamp(isect[2], 0, ubz-1));
+    float x = isect[0] + rdx;
+    float y = isect[1] + rdy;
+    float z = isect[2] + rdz;
 
     float mx = intbound(x, rdx);
     float my = intbound(y, rdy);
     float mz = intbound(z, rdz);
 
-    float dx = +(sx/rdx);
-    float dy = +(sy/rdy);
-    float dz = +(sz/rdz);
-
-    // TODO: handle NaN
+    float dx = sx/rdx;
+    float dy = sy/rdy;
+    float dz = sz/rdz;
+    int ix, iy, iz;
 
     while (
-      x >= 0 && y >= 0 && z >= 0 &&
-      x <= VOXEL_BRICK_WIDTH && y <= VOXEL_BRICK_WIDTH && z <= VOXEL_BRICK_WIDTH
+      x >= brick->bounds[0][0] &&
+      y >= brick->bounds[0][1] &&
+      z >= brick->bounds[0][2] &&
+      x <= brick->bounds[1][0] &&
+      y <= brick->bounds[1][1] &&
+      z <= brick->bounds[1][2]
     ) {
 
-      int ix = floor(x);
-      int iy = floor(y);
-      int iz = floor(z);
+      ix = floor(x);
+      iy = floor(y);
+      iz = floor(z);
 
       if (brick->voxels[ix][iy][iz] > density) {
         out[0] = ix;

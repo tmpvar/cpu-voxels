@@ -81,9 +81,9 @@ typedef struct {
 } screen_area;
 
 float brick_fill(const unsigned int x, const unsigned int y, const unsigned int z) {
-  if (x == VOXEL_BRICK_HALF_WIDTH ||
-      y == VOXEL_BRICK_HALF_WIDTH ||
-      z == VOXEL_BRICK_HALF_WIDTH
+  if (x == VOXEL_BRICK_HALF_SIZE ||
+      y == VOXEL_BRICK_HALF_SIZE ||
+      z == VOXEL_BRICK_HALF_SIZE
   ) {
     return 100.0f;
   }
@@ -223,8 +223,8 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-  vec3 eye = vec3_create(VOXEL_BRICK_HALF_WIDTH, VOXEL_BRICK_HALF_WIDTH, 30.);
-  vec3 center = vec3_create(VOXEL_BRICK_HALF_WIDTH, VOXEL_BRICK_HALF_WIDTH, 0.0 );
+  vec3 eye = vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_SIZE * 4);
+  vec3 center = vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, 0.0 );
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
   orbit_camera_init(eye, center, up);
@@ -262,9 +262,8 @@ int main(void)
   voxel_brick my_first_brick;
   // TODO: make this work when the brick lb corner is not oriented at 0,0,0
   voxel_brick_position(&my_first_brick, vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE));
-  // voxel_brick_fill_constant(&my_first_brick, 100.0f);
   voxel_brick_fill(&my_first_brick, &brick_fill);
-  // my_first_brick.voxels[0][VOXEL_BRICK_WIDTH-1][VOXEL_BRICK_WIDTH-1] = 100.0f;
+
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
