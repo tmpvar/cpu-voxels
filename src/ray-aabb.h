@@ -15,6 +15,7 @@
 #include "ray.h"
 #include "aabb.h"
 #include "vec.h"
+#include "voxel.h"
 #include <xmmintrin.h>
 #include <smmintrin.h>
 #include <immintrin.h>
@@ -22,12 +23,20 @@
 
 const __m128 zero = { 0.0f, 0.0f, 0.0f };
 
-static inline int ray_isect_packet(ray_packet3 packet, aabb_packet b, vec3 *m) {
+static inline int ray_isect_packet(ray_packet3 packet, const voxel_brick brick, const vec3 ro, vec3 *m) {
   vec3 invdir;
   vec3 lambda1;
   vec3 lambda2;
   vec3 lmin;
   vec3 lmax;
+
+  aabb_packet b;
+  b[0] = _mm_sub_ps(brick->bounds_packet[0], vec3f(ro[0]));
+  b[1] = _mm_sub_ps(brick->bounds_packet[1], vec3f(ro[1]));
+  b[2] = _mm_sub_ps(brick->bounds_packet[2], vec3f(ro[2]));
+  b[3] = _mm_sub_ps(brick->bounds_packet[3], vec3f(ro[0]));
+  b[4] = _mm_sub_ps(brick->bounds_packet[4], vec3f(ro[1]));
+  b[5] = _mm_sub_ps(brick->bounds_packet[5], vec3f(ro[2]));
 
   // X Axis
   invdir = packet.invdir[0];
