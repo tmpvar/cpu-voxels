@@ -12,7 +12,7 @@ int main() {
   voxel_brick_position(brick, center);
   voxel_brick_fill_constant(brick, 0.0f);
   voxel_brick_set(
-    &brick,
+    brick,
     VOXEL_BRICK_WIDTH-1,
     VOXEL_BRICK_WIDTH-1,
     VOXEL_BRICK_WIDTH-1,
@@ -45,7 +45,7 @@ int main() {
 
     int voxel_pos[3];
     int found = voxel_brick_traverse(
-      &brick,
+      brick,
       isect,
       rd,
       1.0f,

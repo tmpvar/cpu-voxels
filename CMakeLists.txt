@@ -21,7 +21,7 @@ add_executable(
 )
 
 add_executable(
-    test
+    testvoxels
     src/test.c
     deps/thpool/thpool.c
     ${GLFW_LIBRARIES}
