@@ -266,69 +266,65 @@ int main(void)
   glGenTextures(1, texture);
   float start = glfwGetTime();
   int fps = 0;
-  unsigned int brick_count = 9;
+  unsigned int brick_count = 8;
   voxel_brick my_first_brick[brick_count];
   // for (int i=0; i<brick_count; i++) {
 
   my_first_brick[0] = voxel_brick_create();
-  voxel_brick_position(my_first_brick[0], vec3f(0));
+  voxel_brick_position(my_first_brick[0], vec3f(VOXEL_BRICK_HALF_SIZE));
   voxel_brick_fill(my_first_brick[0], &brick_fill);
 
   my_first_brick[1] = voxel_brick_create();
-  voxel_brick_position(my_first_brick[1], vec3f(-VOXEL_BRICK_SIZE));
+  voxel_brick_position(my_first_brick[1], vec3f(-VOXEL_BRICK_HALF_SIZE));
   voxel_brick_fill(my_first_brick[1], &brick_fill);
 
   my_first_brick[2] = voxel_brick_create();
-  voxel_brick_position(my_first_brick[2], vec3f(VOXEL_BRICK_SIZE));
+  voxel_brick_position(my_first_brick[2], vec3_create(
+    -VOXEL_BRICK_HALF_SIZE,
+     VOXEL_BRICK_HALF_SIZE,
+     VOXEL_BRICK_HALF_SIZE
+  ));
   voxel_brick_fill(my_first_brick[2], &brick_fill);
 
   my_first_brick[3] = voxel_brick_create();
   voxel_brick_position(my_first_brick[3], vec3_create(
-    -VOXEL_BRICK_SIZE,
-    VOXEL_BRICK_SIZE,
-    VOXEL_BRICK_SIZE
+    -VOXEL_BRICK_HALF_SIZE,
+    -VOXEL_BRICK_HALF_SIZE,
+     VOXEL_BRICK_HALF_SIZE
   ));
   voxel_brick_fill(my_first_brick[3], &brick_fill);
 
   my_first_brick[4] = voxel_brick_create();
   voxel_brick_position(my_first_brick[4], vec3_create(
-    VOXEL_BRICK_SIZE,
-    -VOXEL_BRICK_SIZE,
-    VOXEL_BRICK_SIZE
+    -VOXEL_BRICK_HALF_SIZE,
+     VOXEL_BRICK_HALF_SIZE,
+    -VOXEL_BRICK_HALF_SIZE
   ));
   voxel_brick_fill(my_first_brick[4], &brick_fill);
 
   my_first_brick[5] = voxel_brick_create();
   voxel_brick_position(my_first_brick[5], vec3_create(
-    VOXEL_BRICK_SIZE,
-    VOXEL_BRICK_SIZE,
-    -VOXEL_BRICK_SIZE
+     VOXEL_BRICK_HALF_SIZE,
+    -VOXEL_BRICK_HALF_SIZE,
+    -VOXEL_BRICK_HALF_SIZE
   ));
   voxel_brick_fill(my_first_brick[5], &brick_fill);
 
   my_first_brick[6] = voxel_brick_create();
   voxel_brick_position(my_first_brick[6], vec3_create(
-    VOXEL_BRICK_SIZE,
-    -VOXEL_BRICK_SIZE,
-    -VOXEL_BRICK_SIZE
+     VOXEL_BRICK_HALF_SIZE,
+     VOXEL_BRICK_HALF_SIZE,
+    -VOXEL_BRICK_HALF_SIZE
   ));
   voxel_brick_fill(my_first_brick[6], &brick_fill);
 
   my_first_brick[7] = voxel_brick_create();
   voxel_brick_position(my_first_brick[7], vec3_create(
-    -VOXEL_BRICK_SIZE,
-    -VOXEL_BRICK_SIZE,
-    VOXEL_BRICK_SIZE
+     VOXEL_BRICK_HALF_SIZE,
+    -VOXEL_BRICK_HALF_SIZE,
+     VOXEL_BRICK_HALF_SIZE
   ));
   voxel_brick_fill(my_first_brick[7], &brick_fill);
-
-  my_first_brick[8] = voxel_brick_create();
-  voxel_brick_position(my_first_brick[8], vec3_create(
-    -VOXEL_BRICK_SIZE,
-    VOXEL_BRICK_SIZE,
-    -VOXEL_BRICK_SIZE
-  ));
-  voxel_brick_fill(my_first_brick[8], &brick_fill);
 
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
@@ -381,7 +377,7 @@ int main(void)
 #ifdef ENABLE_THREADS
     bh = (height/TOTAL_THREADS);
 
-    for (i; i<TOTAL_THREADS; i++) {
+    for (; i<TOTAL_THREADS; i++) {
 #endif
       areas[i].dcol = dcol;
       areas[i].drow = drow;
