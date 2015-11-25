@@ -2,6 +2,7 @@
 #include "ray.h"
 #include "ray-aabb.h"
 #include "voxel.h"
+#include "voxel-scene.h"
 #include "vec.h"
 
 int main() {
@@ -19,14 +20,8 @@ int main() {
     100.0f
   );
 
-  voxel_brick_fill_constant(brick, 0.0f);
-  voxel_brick_set(
-    brick,
-    VOXEL_BRICK_HALF_WIDTH-1,
-    VOXEL_BRICK_HALF_WIDTH-1,
-    VOXEL_BRICK_HALF_WIDTH-1,
-    100.0f
-  );
+  voxel_scene scene = voxel_scene_create();
+  voxel_scene_add_brick(scene, brick);
 
 
   ray3 r;

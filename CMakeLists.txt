@@ -7,22 +7,17 @@ set(CMAKE_LINKER_FLAGS "-lpthread")
 
 # configure glfw
 set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
 add_subdirectory(deps/glfw)
 include_directories(deps/glfw/include)
 
 # configure thpool
 include_directories(deps/thpool)
+include_directories(src)
 
 add_executable(
     cpuvoxels
     src/main.c
-    deps/thpool/thpool.c
-    ${GLFW_LIBRARIES}
-)
-
-add_executable(
-    testvoxels
-    src/test.c
     deps/thpool/thpool.c
     ${GLFW_LIBRARIES}
 )
@@ -34,4 +29,9 @@ target_link_libraries(
     ${GLFW_LIBRARIES}
 )
 
+# testing
 
+add_executable(
+    testvoxels
+    test/test.c
+)
