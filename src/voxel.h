@@ -6,7 +6,7 @@
   #include "vec.h"
   #include "aabb.h"
 
-  #define VOXEL_BRICK_WIDTH 512
+  #define VOXEL_BRICK_WIDTH 256
   #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
   #define VOXEL_SIZE 0.001f
   #define VOXEL_BRICK_HALF_SIZE (VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE)
