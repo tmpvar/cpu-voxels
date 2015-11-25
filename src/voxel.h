@@ -6,7 +6,7 @@
   #include "vec.h"
   #include "aabb.h"
 
-  #define VOXEL_BRICK_WIDTH 32
+  #define VOXEL_BRICK_WIDTH 128
   #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
   #define VOXEL_SIZE 0.001f
   #define VOXEL_BRICK_HALF_SIZE (VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE)
@@ -21,7 +21,7 @@
     aabb_packet bounds_packet;
   } *voxel_brick, voxel_brick_t;
 
-  void voxel_brick_set(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z, float v) {
+  static inline void voxel_brick_set(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z, float v) {
     brick->voxels[x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z] = v;
   }
 
@@ -50,7 +50,7 @@
     }
   }
 
-  static float voxel_brick_get(voxel_brick brick, const int x, const int y, const int z) {
+  static inline float voxel_brick_get(voxel_brick brick, const int x, const int y, const int z) {
     return brick->voxels[x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z];
   }
 
@@ -118,20 +118,20 @@
     float dx = sx/rdx;
     float dy = sy/rdy;
     float dz = sz/rdz;
-    int ix, iy, iz;
+
+    unsigned int ix = (int)floor(x / VOXEL_SIZE);
+    unsigned int iy = (int)floor(y / VOXEL_SIZE);
+    unsigned int iz = (int)floor(z / VOXEL_SIZE);
+
+    int isx = (int)(sign(rdx) / VOXEL_SIZE);
+    int isy = (int)(sign(rdy) / VOXEL_SIZE);
+    int isz = (int)(sign(rdz) / VOXEL_SIZE);
 
     while (
-      x > 0 &&
-      y > 0 &&
-      z > 0 &&
-      x < VOXEL_BRICK_SIZE &&
-      y < VOXEL_BRICK_SIZE &&
-      z < VOXEL_BRICK_SIZE
+      ix < VOXEL_BRICK_WIDTH &&
+      iy < VOXEL_BRICK_WIDTH &&
+      iz < VOXEL_BRICK_WIDTH
     ) {
-
-      ix = floor(x / VOXEL_SIZE);
-      iy = floor(y / VOXEL_SIZE);
-      iz = floor(z / VOXEL_SIZE);
 
       if (voxel_brick_get(brick, ix, iy, iz) > density) {
         out[0] = ix;
@@ -142,30 +142,18 @@
 
       if(mx < my) {
         if(mx < mz) {
-          out[0] = -sx;
-          out[1] = out[2] = 0;
-
-          x += sx;
+          ix += isx;
           mx += dx;
         } else {
-          out[2] = -sz;
-          out[0] = out[1] = 0;
-
-          z += sz;
+          iz += isz;
           mz += dz;
         }
       } else {
         if(my < mz) {
-          out[1] = -sy;
-          out[0] = out[2] = 0;
-
-          y += sy;
+          iy += isy;
           my += dy;
         } else {
-          out[2] = -sz;
-          out[0] = out[1] = 0;
-
-          z += sz;
+          iz += isz;
           mz += dz;
         }
       }

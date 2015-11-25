@@ -147,8 +147,8 @@ void render_screen_area(void *args) {
         for (int j=0; j<4; j++) {
           unsigned long where = y * width * stride + (x + j) * stride;
 
-          int cr = floor(((x+j)/(float)width) * 255);
-          int cg = floor((y/(float)c->screen_height) * 255);
+          int cr = (int)(((x+j)/(float)width) * 255);
+          int cg = (int)((y/(float)c->screen_height) * 255);
           int cb = 0;
 
           if (local_result & (1<<j)) {

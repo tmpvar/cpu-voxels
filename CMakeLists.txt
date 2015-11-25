@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(cpuvoxels)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx -pthread")
+set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx -pthread -g")
 set(CMAKE_LINKER_FLAGS "-lpthread")
 
 # configure glfw
