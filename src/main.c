@@ -10,6 +10,7 @@
 #include "ray-aabb.h"
 #include "orbit-camera.h"
 #include "voxel.h"
+#include "voxel-scene.h"
 
 #define ENABLE_THREADS
 #ifdef ENABLE_THREADS
@@ -268,7 +269,6 @@ int main(void)
   int fps = 0;
   unsigned int brick_count = 8;
   voxel_brick my_first_brick[brick_count];
-  // for (int i=0; i<brick_count; i++) {
 
   my_first_brick[0] = voxel_brick_create();
   voxel_brick_position(my_first_brick[0], vec3f(VOXEL_BRICK_HALF_SIZE));
