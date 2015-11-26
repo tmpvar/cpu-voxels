@@ -8,9 +8,8 @@ typedef struct ray_t
 {
   //common variables
   vec3 invdir;
+  vec3 dir;
   vec3 origin;
-  // ray slope
-  int classification;
 } ray3;
 
 typedef struct ray_packet_t {

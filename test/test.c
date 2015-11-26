@@ -118,12 +118,35 @@ void test_octree_brick_out_of_bounds() {
   feq(scene->root->bounds[1][2],  VOXEL_BRICK_SIZE * 2.0f);
 }
 
+void test_scene_ray() {
+  voxel_brick brick = voxel_brick_create();
+
+  vec3 center = vec3f(VOXEL_BRICK_HALF_SIZE);
+  voxel_brick_position(brick, center);
+  voxel_brick_fill_constant(brick, 1.0f);
+
+  voxel_scene scene = voxel_scene_create();
+  voxel_scene_add_brick(scene, brick);
+
+  ray3 r;
+  r.origin = vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, 1.0f);
+  r.dir = vec3_norm(center - r.origin);
+  r.invdir = vec3_reciprocal(r.dir);
+
+  ok(voxel_scene_ray(scene, &r), "ray intersects");
+
+  r.dir = vec3_norm(vec3f(1.0f));
+  r.invdir = vec3_reciprocal(r.dir);
+  ok(!voxel_scene_ray(scene, &r), "ray does not intersect");
+}
+
 int main() {
 
   test_aabb();
 
   test_basic_octree_creation();
   test_octree_brick_out_of_bounds();
+  test_scene_ray();
 /*
   voxel_brick brick = voxel_brick_create();
 

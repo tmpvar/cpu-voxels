@@ -93,16 +93,38 @@
       node = node->children[octant];
     }
 
-
-
     // split the node
-    float radius = brick->bounds[1][0] - brick->center[0];
     node->children[octant] = bounding_tree_create_node(VOXEL_BRICK_HALF_SIZE);
     node->children[octant]->brick = brick;
   }
 
-  void voxel_scene_ray(voxel_scene scene, ray3 *r) {
+  int voxel_scene_ray(voxel_scene scene, ray3 *r) {
+    float t;
+    if (ray_isect(r, scene->root->bounds, &t)) {
+      vec3 isect = r->origin + r->dir * vec3f(t);
+      int octant = bounding_tree_octant_from_vec3(scene->root, isect);
 
+      // TODO: handle the cases where the ray misses:
+      // - voxels in brick
+      // - empty octant
+
+      bounding_tree_node node = scene->root;
+      while (1) {
+        if (node->brick != NULL) {
+          int trace[3];
+          if (voxel_brick_traverse(node->brick, isect, r->dir, 0, trace)) {
+            return 1;
+          } else {
+            return 0;
+          }
+        } else if (node->children[octant] == NULL) {
+          return 0;
+        } else {
+          node = node->children[octant];
+        }
+      }
+    }
+    return 0;
   }
 
 #endif
