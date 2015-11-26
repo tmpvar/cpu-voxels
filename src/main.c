@@ -78,6 +78,7 @@ typedef struct {
   vec3 ro;
   vec4 color;
   voxel_brick *bricks;
+  voxel_scene scene;
   unsigned int brick_count;
 } screen_area;
 
@@ -127,81 +128,104 @@ void render_screen_area(void *args) {
   float r = VOXEL_BRICK_HALF_SIZE * 0.99f;
   int result;
   int x, y;
+  ray.origin = ro;
+  int cr, cg, cb;
+  int voxel_pos[3];
 
   for (y=c->y; y<height; ++y) {
     planeXPosition = planeYPosition;
-    for (x=0; x<width; x+=4) {
-      for (int i=0; i<4; i++) {
-        planeXPosition += drow;
-        rd = planeXPosition - ro;
-        dir[i] = rd;
-        invdir[i] = vec3_reciprocal(rd);
-        packet.invdir[0][i] = invdir[i][0];
-        packet.invdir[1][i] = invdir[i][1];
-        packet.invdir[2][i] = invdir[i][2];
+    for (x=0; x<width; x++) {
+      unsigned long where = y * width * stride + x * stride;
+
+      cr = (int)(((x)/(float)width) * 255);
+      cg = (int)((y/(float)c->screen_height) * 255);
+      cb = 0;
+
+      planeXPosition += drow;
+      ray.dir = vec3_norm(planeXPosition - ro);
+      ray.invdir = vec3_reciprocal(ray.dir);
+      // TODO: return brick
+      if (voxel_scene_ray(c->scene, &ray, voxel_pos)) {
+        cr = (int)((voxel_pos[0] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+        cg = (int)((voxel_pos[1] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+        cb = (int)((voxel_pos[2] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
       }
 
-      result = 0;
-      for (int b=0; b<c->brick_count; b++) {
+      data[where+0] = cr;
+      data[where+1] = cg;
+      data[where+2] = cb;
 
-        int local_result = ray_isect_packet(packet, c->bricks[b], c->ro, &m);
-        for (int j=0; j<4; j++) {
-          unsigned long where = y * width * stride + (x + j) * stride;
+      // for (int i=0; i<4; i++) {
+      //   planeXPosition += drow;
+      //   rd = planeXPosition - ro;
+      //   dir[i] = rd;
+      //   invdir[i] = vec3_reciprocal(rd);
+      //   packet.invdir[0][i] = invdir[i][0];
+      //   packet.invdir[1][i] = invdir[i][1];
+      //   packet.invdir[2][i] = invdir[i][2];
+      // }
 
-          int cr = (int)(((x+j)/(float)width) * 255);
-          int cg = (int)((y/(float)c->screen_height) * 255);
-          int cb = 0;
+      // result = 0;
+      // for (int b=0; b<c->brick_count; b++) {
 
-          if (local_result & (1<<j)) {
-            if (result & (1<<j)) { continue; }
-            vec3 isect = ro + dir[j] * vec3f(m[j]);
-            o = isect - c->bricks[b]->center;
+      //   int local_result = ray_isect_packet(packet, c->bricks[b], c->ro, &m);
+      //   for (int j=0; j<4; j++) {
+      //     unsigned long where = y * width * stride + (x + j) * stride;
 
-            for (int k=0; k<3; k++) {
-              if (fabsf(o[k]) >= r) {
-                normal[k] = o[k] > 0.0f ? 1.0f : -1.0f;
-              } else {
-                normal[k] = 0.0f;
-              }
-            }
+      //     int cr = (int)(((x+j)/(float)width) * 255);
+      //     int cg = (int)((y/(float)c->screen_height) * 255);
+      //     int cb = 0;
 
-            float sum = fabsf(normal[0]) + fabsf(normal[1]) + fabsf(normal[2]);
+      //     if (local_result & (1<<j)) {
+      //       if (result & (1<<j)) { continue; }
+      //       vec3 isect = ro + dir[j] * vec3f(m[j]);
+      //       o = isect - c->bricks[b]->center;
 
-            int voxel_pos[3] = { 0, 0, 0 };
-            int found = voxel_brick_traverse(
-              c->bricks[b],
-              isect,
-              vec3_norm(dir[j]),
-              1.0f,
-              voxel_pos
-            );
+      //       for (int k=0; k<3; k++) {
+      //         if (fabsf(o[k]) >= r) {
+      //           normal[k] = o[k] > 0.0f ? 1.0f : -1.0f;
+      //         } else {
+      //           normal[k] = 0.0f;
+      //         }
+      //       }
 
-            if (found) {
-              cr = (int)((voxel_pos[0] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
-              cg = (int)((voxel_pos[1] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
-              cb = (int)((voxel_pos[2] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
-            } else {
-              cr = fmaxf(0, cr - 20);
-              cg = fmaxf(0, cg - 20);
-              cb = fmaxf(0, cb - 20);
-            }
+      //       float sum = fabsf(normal[0]) + fabsf(normal[1]) + fabsf(normal[2]);
 
-            if (sum >= 2) {
-              cr = fmaxf(0, cr - 20);
-              cg = fmaxf(0, cg - 20);
-              cb = fmaxf(0, cb - 20);
-            }
-          }
+      //       int voxel_pos[3] = { 0, 0, 0 };
+      //       int found = voxel_brick_traverse(
+      //         c->bricks[b],
+      //         isect,
+      //         vec3_norm(dir[j]),
+      //         1.0f,
+      //         voxel_pos
+      //       );
 
-          if (!(result & (1<<j))) {
-            data[where+0] = cr;
-            data[where+1] = cg;
-            data[where+2] = cb;
-          }
-        }
+      //       if (found) {
+      //         cr = (int)((voxel_pos[0] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+      //         cg = (int)((voxel_pos[1] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+      //         cb = (int)((voxel_pos[2] / (float)VOXEL_BRICK_WIDTH) * 255.0f);
+      //       } else {
+      //         cr = fmaxf(0, cr - 20);
+      //         cg = fmaxf(0, cg - 20);
+      //         cb = fmaxf(0, cb - 20);
+      //       }
 
-        result |= local_result;
-      }
+      //       if (sum >= 2) {
+      //         cr = fmaxf(0, cr - 20);
+      //         cg = fmaxf(0, cg - 20);
+      //         cb = fmaxf(0, cb - 20);
+      //       }
+      //     }
+
+      //     if (!(result & (1<<j))) {
+      //       data[where+0] = cr;
+      //       data[where+1] = cg;
+      //       data[where+2] = cb;
+      //     }
+      //   }
+
+      //   result |= local_result;
+      // }
     }
     planeYPosition += dcol;
   }
@@ -326,6 +350,12 @@ int main(void)
   ));
   voxel_brick_fill(my_first_brick[7], &brick_fill);
 
+
+  voxel_scene scene = voxel_scene_create();
+  for (int b = 0; b<brick_count; b++) {
+    voxel_scene_add_brick(scene, my_first_brick[b]);
+  }
+
   while (!glfwWindowShouldClose(window)) {
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
       orbit_camera_rotate(0, 0, -.1, 0);
@@ -393,6 +423,7 @@ int main(void)
       areas[i].render_id = i;
       areas[i].bricks = my_first_brick;
       areas[i].brick_count = brick_count;
+      areas[i].scene = scene;
 #ifdef ENABLE_THREADS
       thpool_add_work(thpool, (void *)render_screen_area, (void *)(&areas[i]));
     }

@@ -98,7 +98,7 @@
     node->children[octant]->brick = brick;
   }
 
-  int voxel_scene_ray(voxel_scene scene, ray3 *r) {
+  int voxel_scene_ray(voxel_scene scene, ray3 *r, int *out) {
     float t;
     if (ray_isect(r, scene->root->bounds, &t)) {
       vec3 isect = r->origin + r->dir * vec3f(t);
@@ -111,8 +111,7 @@
       bounding_tree_node node = scene->root;
       while (1) {
         if (node->brick != NULL) {
-          int trace[3];
-          if (voxel_brick_traverse(node->brick, isect, r->dir, 0, trace)) {
+          if (voxel_brick_traverse(node->brick, isect, r->dir, 0, out)) {
             return 1;
           } else {
             return 0;

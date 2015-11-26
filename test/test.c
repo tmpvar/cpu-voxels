@@ -128,16 +128,17 @@ void test_scene_ray() {
   voxel_scene scene = voxel_scene_create();
   voxel_scene_add_brick(scene, brick);
 
+  int out[3];
   ray3 r;
   r.origin = vec3_create(VOXEL_BRICK_HALF_SIZE, VOXEL_BRICK_HALF_SIZE, 1.0f);
   r.dir = vec3_norm(center - r.origin);
   r.invdir = vec3_reciprocal(r.dir);
 
-  ok(voxel_scene_ray(scene, &r), "ray intersects");
+  ok(voxel_scene_ray(scene, &r, out), "ray intersects");
 
   r.dir = vec3_norm(vec3f(1.0f));
   r.invdir = vec3_reciprocal(r.dir);
-  ok(!voxel_scene_ray(scene, &r), "ray does not intersect");
+  ok(!voxel_scene_ray(scene, &r, out), "ray does not intersect");
 }
 
 int main() {
