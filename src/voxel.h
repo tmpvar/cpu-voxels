@@ -5,6 +5,7 @@
   #include <float.h>
   #include "vec.h"
   #include "aabb.h"
+  #include "swizzle.h"
 
   #define VOXEL_BRICK_WIDTH 128
   #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
@@ -54,6 +55,14 @@
     return brick->voxels[x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z];
   }
 
+  static inline float voxel_brick_get_vec3(voxel_brick brick, const vec3 p) {
+    int x = (int)p[0];
+    int y = (int)p[1];
+    int z = (int)p[2];
+    int index = x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z;
+    return brick->voxels[index];
+  }
+
   static void voxel_brick_position(voxel_brick brick, const vec3 center) {
     // position the brick in space
     brick->center = center;
@@ -91,6 +100,42 @@
   }
 
   static int voxel_brick_traverse(
+    voxel_brick brick,
+    const vec3 isect,
+    const vec3 rd,
+    const float density,
+    int *out
+  ) {
+
+    vec3 voxel_size = vec3f(VOXEL_SIZE);
+    vec3 mapPos = ((isect - brick->bounds[0]) + rd * voxel_size) / voxel_size;
+    vec3 point_five = vec3f(0.5f);
+    vec3 max = vec3f(VOXEL_BRICK_WIDTH);
+    vec3 deltaDist = vec3_abs(vec3f(vec3_len(rd)) / rd);
+    vec3 rayStep = vec3_sign(rd);
+    vec3 sideDist = (rayStep * (mapPos - isect/voxel_size) + (rayStep * point_five) + point_five) * deltaDist;
+
+    while (_mm_movemask_ps(mapPos < max) == 0b1111) {
+      if (voxel_brick_get_vec3(brick, mapPos) > density) {
+        out[0] = (int)mapPos[0];
+        out[1] = (int)mapPos[1];
+        out[2] = (int)mapPos[2];
+        return 1;
+      }
+
+      vec3 mask = _mm_cvtepi32_ps(
+        sideDist < _mm_swizzle_ps_yzxw(sideDist) &&
+        sideDist <= _mm_swizzle_ps_zxyw(sideDist)
+      );
+
+      sideDist += mask * deltaDist;
+      mapPos += mask * rayStep;
+    }
+    return 0;
+  }
+
+  // TODO: replace density with a callback?
+  static int voxel_brick_traverse1(
     voxel_brick brick,
     const vec3 isect,
     const vec3 rd,
