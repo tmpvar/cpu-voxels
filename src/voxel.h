@@ -81,7 +81,7 @@
     return a < 0 ? -VOXEL_SIZE : VOXEL_SIZE;
   }
 
-  float mfmod(const float x, const float y) { float a; return ((a=x/y)-(int)a)*y; }
+  float mfmod(const float x, const float y) { float a = x/y; return (a-(int)a)*y; }
 
   static inline float mod(const float value, const float modulus) {
     return mfmod(mfmod(value, modulus) + modulus, modulus);
@@ -110,6 +110,7 @@
     const vec3 voxel_brick_width = vec3f(VOXEL_BRICK_WIDTH);
 
     vec3 voxel_size = vec3f(VOXEL_SIZE);
+    vec3 voxel_size_inv = _mm_rcp_ps(voxel_size);
     vec3 dir_sized = rd * voxel_size;
     vec3 dir_sign = vec3_sign(rd) * voxel_size;
     vec3 pos = (isect - brick->bounds[0]) + dir_sized;
@@ -121,19 +122,12 @@
     );
 
     vec3 deltat = dir_sign / dir_sized;
-    vec3 index = _mm_floor_ps(pos / voxel_size);
-    vec3 step = dir_sign / voxel_size;
+    vec3 index = _mm_floor_ps(pos * voxel_size_inv);
+    vec3 step = dir_sign * voxel_size_inv;
     vec3 mask;
 
-    while (
-//      !_mm_movemask_ps(_mm_or_ps(index < zero, index >= voxel_brick_width))
-      index[0] >= 0 &&
-      index[1] >= 0 &&
-      index[2] >= 0 &&
-      index[0] < VOXEL_BRICK_WIDTH &&
-      index[1] < VOXEL_BRICK_WIDTH &&
-      index[2] < VOXEL_BRICK_WIDTH
-      ) {
+    // compare with out of bounds scenario to make the comparison stupid simple (but inverted)
+    while (!_mm_movemask_ps(_mm_or_ps(index < zero, index >= voxel_brick_width))) {
 
       if (voxel_brick_get_vec3(brick, index) > density) {
         out[0] = index[0];
