@@ -56,11 +56,7 @@
   }
 
   static inline float voxel_brick_get_vec3(voxel_brick brick, const vec3 p) {
-    int x = (int)p[0];
-    int y = (int)p[1];
-    int z = (int)p[2];
-    int index = x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z;
-    return brick->voxels[index];
+    return brick->voxels[(int)p[0]*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + (int)p[1]*VOXEL_BRICK_WIDTH + (int)p[2]];
   }
 
   static void voxel_brick_position(voxel_brick brick, const vec3 center) {
@@ -85,8 +81,10 @@
     return a < 0 ? -VOXEL_SIZE : VOXEL_SIZE;
   }
 
+  float mfmod(const float x, const float y) { float a; return ((a=x/y)-(int)a)*y; }
+
   static inline float mod(const float value, const float modulus) {
-    return fmod(fmod(value, modulus) + modulus, modulus);
+    return mfmod(mfmod(value, modulus) + modulus, modulus);
   }
 
   static inline float intbound(float s, float ds) {
@@ -99,6 +97,7 @@
     return (VOXEL_SIZE-s)/ds;
   }
 
+  // TODO: replace density with a callback?
   static int voxel_brick_traverse(
     voxel_brick brick,
     const vec3 isect,
@@ -107,100 +106,49 @@
     int *out
   ) {
 
+    const vec3 zero = vec3f(0.0f);
+    const vec3 voxel_brick_width = vec3f(VOXEL_BRICK_WIDTH);
+
     vec3 voxel_size = vec3f(VOXEL_SIZE);
-    vec3 mapPos = ((isect - brick->bounds[0]) + rd * voxel_size) / voxel_size;
-    vec3 point_five = vec3f(0.5f);
-    vec3 max = vec3f(VOXEL_BRICK_WIDTH);
-    vec3 deltaDist = vec3_abs(vec3f(vec3_len(rd)) / rd);
-    vec3 rayStep = vec3_sign(rd);
-    vec3 sideDist = (rayStep * (mapPos - isect/voxel_size) + (rayStep * point_five) + point_five) * deltaDist;
+    vec3 dir_sized = rd * voxel_size;
+    vec3 dir_sign = vec3_sign(rd) * voxel_size;
+    vec3 pos = (isect - brick->bounds[0]) + dir_sized;
 
-    while (_mm_movemask_ps(mapPos < max) == 0b1111) {
-      if (voxel_brick_get_vec3(brick, mapPos) > density) {
-        out[0] = (int)mapPos[0];
-        out[1] = (int)mapPos[1];
-        out[2] = (int)mapPos[2];
-        return 1;
-      }
+    vec3 maxt = vec3_create(
+      intbound(pos[0], dir_sized[0]),
+      intbound(pos[1], dir_sized[1]),
+      intbound(pos[2], dir_sized[2])
+    );
 
-      vec3 mask = _mm_cvtepi32_ps(
-        sideDist < _mm_swizzle_ps_yzxw(sideDist) &&
-        sideDist <= _mm_swizzle_ps_zxyw(sideDist)
-      );
-
-      sideDist += mask * deltaDist;
-      mapPos += mask * rayStep;
-    }
-    return 0;
-  }
-
-  // TODO: replace density with a callback?
-  static int voxel_brick_traverse1(
-    voxel_brick brick,
-    const vec3 isect,
-    const vec3 rd,
-    const float density,
-    int *out
-  ) {
-
-    float rdx = rd[0] * VOXEL_SIZE;
-    float rdy = rd[1] * VOXEL_SIZE;
-    float rdz = rd[2] * VOXEL_SIZE;
-
-    float sx = sign(rdx);
-    float sy = sign(rdy);
-    float sz = sign(rdz);
-
-    float x = (isect[0] - brick->bounds[0][0]) + rdx;
-    float y = (isect[1] - brick->bounds[0][1]) + rdy;
-    float z = (isect[2] - brick->bounds[0][2]) + rdz;
-
-    float mx = intbound(x, rdx);
-    float my = intbound(y, rdy);
-    float mz = intbound(z, rdz);
-
-    float dx = sx/rdx;
-    float dy = sy/rdy;
-    float dz = sz/rdz;
-
-    unsigned int ix = (int)floor(x / VOXEL_SIZE);
-    unsigned int iy = (int)floor(y / VOXEL_SIZE);
-    unsigned int iz = (int)floor(z / VOXEL_SIZE);
-
-    int isx = (int)(sign(rdx) / VOXEL_SIZE);
-    int isy = (int)(sign(rdy) / VOXEL_SIZE);
-    int isz = (int)(sign(rdz) / VOXEL_SIZE);
+    vec3 deltat = dir_sign / dir_sized;
+    vec3 index = _mm_floor_ps(pos / voxel_size);
+    vec3 step = dir_sign / voxel_size;
+    vec3 mask;
 
     while (
-      ix < VOXEL_BRICK_WIDTH &&
-      iy < VOXEL_BRICK_WIDTH &&
-      iz < VOXEL_BRICK_WIDTH
-    ) {
+//      !_mm_movemask_ps(_mm_or_ps(index < zero, index >= voxel_brick_width))
+      index[0] >= 0 &&
+      index[1] >= 0 &&
+      index[2] >= 0 &&
+      index[0] < VOXEL_BRICK_WIDTH &&
+      index[1] < VOXEL_BRICK_WIDTH &&
+      index[2] < VOXEL_BRICK_WIDTH
+      ) {
 
-      if (voxel_brick_get(brick, ix, iy, iz) > density) {
-        out[0] = ix;
-        out[1] = iy;
-        out[2] = iz;
+      if (voxel_brick_get_vec3(brick, index) > density) {
+        out[0] = index[0];
+        out[1] = index[1];
+        out[2] = index[2];
         return 1;
       }
 
-      if(mx < my) {
-        if(mx < mz) {
-          ix += isx;
-          mx += dx;
-        } else {
-          iz += isz;
-          mz += dz;
-        }
-      } else {
-        if(my < mz) {
-          iy += isy;
-          my += dy;
-        } else {
-          iz += isz;
-          mz += dz;
-        }
-      }
+      mask = _mm_and_ps(
+        _mm_cmplt_ps(maxt, _mm_swizzle_ps_yzxw(maxt)),
+        _mm_cmple_ps(maxt, _mm_swizzle_ps_zxyw(maxt))
+      );
+
+      maxt += _mm_and_ps(mask, deltat);
+      index += _mm_and_ps(mask, step);
     }
     return 0;
   }
