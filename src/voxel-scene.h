@@ -27,18 +27,18 @@
     return node;
   }
 
-  int bounding_tree_node_is_leaf(const bounding_tree_node node) {
+  static inline int bounding_tree_node_is_leaf(const bounding_tree_node node) {
     return node->brick != NULL;
   }
 
   // packs the position into a bitmask that can be used to directly lookup
   // the appropriate node
-  int bounding_tree_octant_from_vec3(bounding_tree_node node, vec3 pos) {
+  static inline int bounding_tree_octant_from_vec3(const bounding_tree_node node, const vec3 pos) {
     vec3 diff = pos - node->center;
     return  (diff[0] > 0 ? 1 : 0) | (diff[1] > 0 ? 2 : 0) | (diff[2] > 0 ? 4 : 0);
   }
 
-  vec3 bounding_tree_corner_from_octant(bounding_tree_node node, const int octant) {
+  static inline vec3 bounding_tree_corner_from_octant(bounding_tree_node node, const int octant) {
     return vec3_create(
       octant & 1 ? node->radius : -node->radius,
       octant & 2 ? node->radius : -node->radius,
