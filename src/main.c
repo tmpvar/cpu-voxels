@@ -142,7 +142,7 @@ void render_screen_area(void *args) {
       cb = 0;
 
       planeXPosition += drow;
-      ray.dir = vec3_norm(planeXPosition - ro);
+      ray.dir = planeXPosition - ro;
       ray.invdir = vec3_reciprocal(ray.dir);
       // TODO: return brick
       if (voxel_scene_ray(c->scene, &ray, voxel_pos)) {

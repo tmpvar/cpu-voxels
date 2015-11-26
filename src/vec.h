@@ -13,7 +13,8 @@ typedef float mat4[16];
 typedef __m128 vec3;// __attribute__((vector_size(32)));
 // typedef __m128 vec4;// __attribute__((vector_size(32)));
 typedef float vec4[4], quat[4];
-
+vec3 _zero = {0.0f, 0.0f, 0.0f, 0.0f};
+vec3 _negative_zero = {-0.0f, -0.0f, -0.0f, -0.0f};
 
 #define LINMATH_H_DEFINE_VEC(n) \
 static inline void vec##n##_add(vec##n r, vec##n const a, vec##n const b) \
@@ -67,7 +68,6 @@ static inline vec3 vec3f(const float x) {
   return _mm_set1_ps(x);
 }
 
-
 static inline float vec3_len(vec3 const v) {
   return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(v, v, 0x71)));
 }
@@ -86,6 +86,14 @@ static inline vec3 vec3_min(const vec3 a, const vec3 b) {
 
 static inline vec3 vec3_copy(const vec3 a) {
   return vec3_create(a[0], a[1], a[2]);
+}
+
+static inline vec3 vec3_sign(const vec3 a) {
+  return _mm_cvtepi32_ps((a < _zero) - (a > _zero));
+}
+
+static inline vec3 vec3_abs(const vec3 a) {
+  return _mm_andnot_ps(a, _negative_zero);
 }
 
 static inline vec3 vec3_mul_cross(const vec3 a, const vec3 b) {

@@ -90,7 +90,6 @@
     return (VOXEL_SIZE-s)/ds;
   }
 
-  // TODO: replace density with a callback?
   static int voxel_brick_traverse(
     voxel_brick brick,
     const vec3 isect,
