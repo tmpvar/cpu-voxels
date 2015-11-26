@@ -93,7 +93,7 @@ static inline vec3 vec3_sign(const vec3 a) {
 }
 
 static inline vec3 vec3_abs(const vec3 a) {
-  return _mm_andnot_ps(a, _negative_zero);
+  return _mm_max_ps(_mm_sub_ps(_mm_setzero_ps(), a), a);
 }
 
 static inline vec3 vec3_mul_cross(const vec3 a, const vec3 b) {
