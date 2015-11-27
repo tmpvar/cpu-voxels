@@ -65,28 +65,21 @@ static inline int ray_isect_packet(ray_packet3 packet, const voxel_brick brick, 
   return _mm_movemask_ps(lmax >= _mm_max_ps(zero, lmin));
 }
 
-uint8_t ray_isect(ray3 *r, aabb b, float *m) {
-  float tx1 = (b[0][0] - r->origin[0]) * r->invdir[0];
-  float tx2 = (b[1][0] - r->origin[0]) * r->invdir[0];
+static inline int ray_isect(const ray3 *r, const aabb b, vec3 *out) {
+  const vec3 x = _mm_min_ps(
+    (b[0] - r->origin) * r->invdir,
+    (b[1] - r->origin) * r->invdir
+  );
 
-  float tmin = fminf(tx1, tx2);
-  float tmax = fmaxf(tx1, tx2);
+  const vec3 max2 = _mm_max_ps(x, _mm_shuffle_ps(x, x, _MM_SHUFFLE(0,0,3,2)));
+  const float tmin = _mm_cvtss_f32(_mm_max_ps(max2, _mm_shuffle_ps(max2, max2, _MM_SHUFFLE(0,0,0,1))));
 
-  float ty1 = (b[0][1] - r->origin[1]) * r->invdir[1];
-  float ty2 = (b[1][1] - r->origin[1]) * r->invdir[1];
-
-  tmin = fmaxf(tmin, fminf(ty1, ty2));
-  tmax = fminf(tmax, fmaxf(ty1, ty2));
-
-  float tz1 = (b[0][2] - r->origin[2])*r -> invdir[2];
-  float tz2 = (b[1][2] - r->origin[2])*r -> invdir[2];
-
-  tmin = fmaxf(tmin, fminf(tz1, tz2));
-  tmax = fminf(tmax, fmaxf(tz1, tz2));
-
-  *m = tmin;
-
-  return tmax >= fmaxf(0.0, tmin);
+  if (tmin > 0.0f) {
+    *out = r->origin + r->dir * vec3f(tmin);
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 #endif

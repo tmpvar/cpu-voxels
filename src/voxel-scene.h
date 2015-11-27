@@ -99,9 +99,9 @@
   }
 
   int voxel_scene_ray(voxel_scene scene, ray3 *r, int *out) {
-    float t;
-    if (ray_isect(r, scene->root->bounds, &t)) {
-      vec3 isect = r->origin + r->dir * vec3f(t);
+    vec3 isect;
+    if (ray_isect(r, scene->root->bounds, &isect)) {
+
       int octant = bounding_tree_octant_from_vec3(scene->root, isect);
 
       // TODO: handle the cases where the ray misses:
