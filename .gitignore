@@ -7,5 +7,5 @@ cpuvoxels.*
 deps/glfw/GLFW.xcodeproj
 deps/glfw/CMakeScripts
 CMakeScripts
-cmake
+./cmake
 make

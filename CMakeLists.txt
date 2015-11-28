@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 2.6)
 project(cpuvoxels)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx -pthread -g")
+set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx")
 set(CMAKE_LINKER_FLAGS "-lpthread")
 
 # configure glfw
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW docs")
+set(GLFW_INSTALL OFF CACHE BOOL "Build the GLFW installation target")
 add_subdirectory(deps/glfw)
-set(GLFW_BUILD_EXAMPLES OFF)
-set(GLFW_BUILD_TESTS OFF)
 include_directories(deps/glfw/include)
 
 # configure thpool
@@ -16,12 +17,8 @@ include_directories(deps/thpool)
 include_directories(src)
 
 # configure benchmark
-# add_subdirectory(deps/benchmark/src)
-
-
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Build the BENCHMARK tests")
 add_subdirectory(deps/benchmark)
-set(BENCHMARK_ENABLE_TESTING OFF)
-# include(deps/benchmark/CMakeLists.txt)
 include_directories(deps/benchmark/include)
 
 add_executable(
