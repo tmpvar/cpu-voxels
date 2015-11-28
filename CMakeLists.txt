@@ -6,14 +6,23 @@ set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx -pthread -g")
 set(CMAKE_LINKER_FLAGS "-lpthread")
 
 # configure glfw
+add_subdirectory(deps/glfw)
 set(GLFW_BUILD_EXAMPLES OFF)
 set(GLFW_BUILD_TESTS OFF)
-add_subdirectory(deps/glfw)
 include_directories(deps/glfw/include)
 
 # configure thpool
 include_directories(deps/thpool)
 include_directories(src)
+
+# configure benchmark
+# add_subdirectory(deps/benchmark/src)
+
+
+add_subdirectory(deps/benchmark)
+set(BENCHMARK_ENABLE_TESTING OFF)
+# include(deps/benchmark/CMakeLists.txt)
+include_directories(deps/benchmark/include)
 
 add_executable(
     cpuvoxels
@@ -30,8 +39,19 @@ target_link_libraries(
 )
 
 # testing
-
 add_executable(
     testvoxels
     test/test.c
+)
+
+# micro-benchmarks
+add_executable(
+    benchvoxels
+    test/bench.cc
+    ${BENCHMARK_SOURCE_FILES}
+)
+
+target_link_libraries(
+    benchvoxels
+    benchmark
 )
