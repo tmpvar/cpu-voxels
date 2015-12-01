@@ -97,7 +97,7 @@
       octant = bounding_tree_octant_from_vec3(node, brick->center);
 
       if (node->children[octant] == NULL) {
-        float node_radius = VOXEL_BRICK_HALF_SIZE * (float)(node->level);
+        float node_radius = node->radius * 0.5f;
         vec3 center = node->center + bounding_tree_corner_from_octant(node, octant) * vec3f(0.5f);
         node->children[octant] = bounding_tree_create_node(
           node_radius,
@@ -122,9 +122,9 @@
     vec3 isect;
 
     if (accumulator[0] < 255) {
-      accumulator[0] += 20;
-      accumulator[1] += 20;
-      accumulator[2] += 20;
+      accumulator[0] += 1;
+      accumulator[1] += 1;
+      accumulator[2] += 1;
     }
 
     if (ray_isect_simd(r, node->bounds, &isect)) {

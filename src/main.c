@@ -304,7 +304,7 @@ int main(void)
   glfwSetKeyCallback(window, key_callback);
 
 
-  unsigned int scene_radius = 60;//, scene_height=50;50000;
+  unsigned int scene_radius = 1000;//, scene_height=50;50000;
   voxel_brick bricks[scene_radius * scene_radius];
   voxel_scene scene = voxel_scene_create();
 
@@ -339,7 +339,7 @@ int main(void)
   // voxel_brick_fill_constant(bricks[0], 1.0f);
   // voxel_scene_add_brick(scene, bricks[0]);
 
-  vec3 eye = vec3_create(0.0f, 0.0f, -scene->root->radius * 2);
+  vec3 eye = vec3_create(0.0f, 0.0f, -scene->root->radius * 4);
   vec3 center = vec3f(0.0f);
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 
