@@ -18,8 +18,8 @@ include_directories(deps/thpool)
 include_directories(src)
 
 # configure googletest
-add_subdirectory(deps/googletest/googletest)
-include_directories(deps/googletest/googletest/include)
+add_subdirectory(deps/gtest/googletest)
+include_directories(deps/gtest/googletest/include)
 
 # configure benchmark
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Build the BENCHMARK tests")
