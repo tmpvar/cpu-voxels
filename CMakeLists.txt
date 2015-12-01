@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(cpuvoxels)
 
-set(CMAKE_C_FLAGS "-O3 -march=native -msse4.2 -mavx")
+set(CMAKE_C_FLAGS "-O3 -march=native -msse4.1 -msse4.2 -mavx -g -pthread")
+set(CMAKE_CXX_FLAGS "-march=native -msse4.2 -mavx -g -pthread")
 set(CMAKE_LINKER_FLAGS "-lpthread")
 
 # configure glfw
@@ -15,6 +16,10 @@ include_directories(deps/glfw/include)
 # configure thpool
 include_directories(deps/thpool)
 include_directories(src)
+
+# configure googletest
+add_subdirectory(deps/googletest/googletest)
+include_directories(deps/googletest/googletest/include)
 
 # configure benchmark
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Build the BENCHMARK tests")
@@ -38,7 +43,13 @@ target_link_libraries(
 # testing
 add_executable(
     testvoxels
-    test/test.c
+    test/test.cc
+    ${GOOGLETEST_SOURCE_FILES}
+)
+
+target_link_libraries(
+    testvoxels
+    gtest
 )
 
 # micro-benchmarks

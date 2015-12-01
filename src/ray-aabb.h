@@ -21,7 +21,7 @@
 #include <immintrin.h>
 #include <avxintrin.h>
 
-const __m128 zero = { 0.0f, 0.0f, 0.0f };
+const vec3 zero = { 0.0f, 0.0f, 0.0f };
 
 static inline int ray_isect_packet(ray_packet3 packet, const voxel_brick brick, const vec3 ro, vec3 *m) {
   vec3 invdir;
@@ -65,21 +65,93 @@ static inline int ray_isect_packet(ray_packet3 packet, const voxel_brick brick, 
   return _mm_movemask_ps(lmax >= _mm_max_ps(zero, lmin));
 }
 
-static inline int ray_isect(const ray3 *r, const aabb b, vec3 *out) {
-  const vec3 x = _mm_min_ps(
-    (b[0] - r->origin) * r->invdir,
-    (b[1] - r->origin) * r->invdir
-  );
+static inline int ray_isect(ray3 *r, aabb b, vec3 *out) {
+  float tx1 = (b[0][0] - r->origin[0]) * r->invdir[0];
+  float tx2 = (b[1][0] - r->origin[0]) * r->invdir[0];
 
-  const vec3 max2 = _mm_max_ps(x, _mm_shuffle_ps(x, x, _MM_SHUFFLE(0,0,3,2)));
-  const float tmin = _mm_cvtss_f32(_mm_max_ps(max2, _mm_shuffle_ps(max2, max2, _MM_SHUFFLE(0,0,0,1))));
+  float tmin = fminf(tx1, tx2);
+  float tmax = fmaxf(tx1, tx2);
 
-  if (tmin > 0.0f) {
-    *out = r->origin + r->dir * vec3f(tmin);
-    return 1;
-  } else {
-    return 0;
-  }
+  float ty1 = (b[0][1] - r->origin[1]) * r->invdir[1];
+  float ty2 = (b[1][1] - r->origin[1]) * r->invdir[1];
+
+  tmin = fmaxf(tmin, fminf(ty1, ty2));
+  tmax = fminf(tmax, fmaxf(ty1, ty2));
+
+  float tz1 = (b[0][2] - r->origin[2])*r -> invdir[2];
+  float tz2 = (b[1][2] - r->origin[2])*r -> invdir[2];
+
+  tmin = fmaxf(tmin, fminf(tz1, tz2));
+  tmax = fminf(tmax, fmaxf(tz1, tz2));
+
+  // *m = tmin;
+  *out = r->origin + r->dir * vec3f(tmin);
+  return tmax >= fmaxf(0.0, tmin);
 }
+
+// turn those verbose intrinsics into something readable.
+#define loadps(mem)   _mm_load_ps((const float * const)(mem))
+#define storess(ss,mem)   _mm_store_ss((float * const)(mem),(ss))
+#define minss     _mm_min_ss
+#define maxss     _mm_max_ss
+#define minps     _mm_min_ps
+#define maxps     _mm_max_ps
+#define mulps     _mm_mul_ps
+#define subps     _mm_sub_ps
+#define rotatelps(ps)   _mm_shuffle_ps((ps),(ps), 0x39) // a,b,c,d -> b,c,d,a
+#define muxhps(low,high)  _mm_movehl_ps((low),(high)) // low{a,b,c,d}|high{e,f,g,h} = {c,d,g,h}
+
+
+static const float flt_plus_inf = INFINITY; // let's keep C and C++ compilers happy.
+static const float ps_cst_plus_inf[4]  = {  flt_plus_inf,  flt_plus_inf,  flt_plus_inf,  flt_plus_inf },
+  ps_cst_minus_inf[4] = { -flt_plus_inf, -flt_plus_inf, -flt_plus_inf, -flt_plus_inf };
+
+static int ray_isect_simd(ray3 *r, aabb b, vec3 *out) {
+  // you may already have those values hanging around somewhere
+  const vec3
+    plus_inf  = loadps(ps_cst_plus_inf),
+    minus_inf = loadps(ps_cst_minus_inf);
+
+  // use whatever's apropriate to load.
+  const vec3
+    box_min = loadps(&b[0]),
+    box_max = loadps(&b[1]),
+    pos = loadps(&r->origin),
+    inv_dir = loadps(&r->invdir);
+
+  // use a div if inverted directions aren't available
+  const vec3 l1 = mulps(subps(box_min, pos), inv_dir);
+  const vec3 l2 = mulps(subps(box_max, pos), inv_dir);
+
+  // the order we use for those min/max is vital to filter out
+  // NaNs that happens when an inv_dir is +/- inf and
+  // (box_min - pos) is 0. inf * 0 = NaN
+  const vec3 filtered_l1a = minps(l1, plus_inf);
+  const vec3 filtered_l2a = minps(l2, plus_inf);
+
+  const vec3 filtered_l1b = maxps(l1, minus_inf);
+  const vec3 filtered_l2b = maxps(l2, minus_inf);
+
+  // now that we're back on our feet, test those slabs.
+  vec3 lmax = maxps(filtered_l1a, filtered_l2a);
+  vec3 lmin = minps(filtered_l1b, filtered_l2b);
+
+  // unfold back. try to hide the latency of the shufps & co.
+  const vec3 lmax0 = rotatelps(lmax);
+  const vec3 lmin0 = rotatelps(lmin);
+  lmax = minss(lmax, lmax0);
+  lmin = maxss(lmin, lmin0);
+
+  const vec3 lmax1 = muxhps(lmax,lmax);
+  const vec3 lmin1 = muxhps(lmin,lmin);
+  lmax = minss(lmax, lmax1);
+  lmin = maxss(lmin, lmin1);
+
+  const int ret = _mm_comige_ss(lmax, _mm_setzero_ps()) & _mm_comige_ss(lmax,lmin);
+
+  *out = r->origin + r->dir * vec3f(lmin[0]);
+  return  ret;
+}
+
 
 #endif

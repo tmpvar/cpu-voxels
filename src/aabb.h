@@ -20,6 +20,13 @@
   }
 
   static int aabb_contains(aabb b, vec3 p) {
-    return _mm_movemask_ps(p >= b[0] && p <= b[1]) == 0b1111;
+    return p[0] >= b[0][0] && p[0] <= b[1][0] &&
+           p[1] >= b[0][1] && p[1] <= b[1][1] &&
+           p[2] >= b[0][2] && p[2] <= b[1][2];
+
+    // TODO: move back to simd when we can get the 4th component
+    //       under control.  In it's current form, it causes octree
+    //       creation to break.
+    // return _mm_movemask_ps(p >= b[0] && p <= b[1]) == 0b1111;
   }
 #endif

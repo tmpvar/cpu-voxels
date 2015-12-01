@@ -7,11 +7,18 @@
   #include "aabb.h"
   #include "swizzle.h"
 
-  #define VOXEL_BRICK_WIDTH 128
-  #define VOXEL_BRICK_HALF_WIDTH (VOXEL_BRICK_WIDTH/2.0f)
+  #define VOXEL_BRICK_WIDTH 2
+  #define VOXEL_BRICK_HALF_WIDTH (1.0f)
   #define VOXEL_SIZE 0.001f
-  #define VOXEL_BRICK_HALF_SIZE (VOXEL_BRICK_HALF_WIDTH * VOXEL_SIZE)
-  #define VOXEL_BRICK_SIZE (VOXEL_BRICK_WIDTH * VOXEL_SIZE)
+  #define VOXEL_BRICK_HALF_SIZE (0.001f)
+  #define VOXEL_BRICK_SIZE (0.002f)
+
+  #define VOXEL_BRICK_IDX_X 1
+  #define VOXEL_BRICK_IDX_Y 2
+  #define VOXEL_BRICK_IDX_Z 4
+  #define VOXEL_BRICK_LENGTH 8
+
+
 
   typedef float (*set_callback_t)(const unsigned int x, const unsigned int y, const unsigned int z);
 
@@ -102,13 +109,8 @@
     voxel_brick brick,
     const vec3 isect,
     const vec3 rd,
-    const float density,
-    int *out
+    const float density
   ) {
-
-    const vec3 zero = vec3f(0.0f);
-    const vec3 voxel_brick_width = vec3f(VOXEL_BRICK_WIDTH);
-
     vec3 voxel_size = vec3f(VOXEL_SIZE);
     vec3 voxel_size_inv = _mm_rcp_ps(voxel_size);
     vec3 dir_sized = rd * voxel_size;
@@ -126,14 +128,13 @@
     vec3 step = dir_sign * voxel_size_inv;
     vec3 mask;
 
+    vec3 diff = isect - brick->center;
+    unsigned int brick_index = (diff[0] > 0 ? 1 : 0) | (diff[1] > 0 ? 2 : 0) | (diff[2] > 0 ? 4 : 0);
     // compare with out of bounds scenario to make the comparison stupid simple (but inverted)
-    while (!_mm_movemask_ps(_mm_or_ps(index < zero, index >= voxel_brick_width))) {
+    while (brick_index <= VOXEL_BRICK_LENGTH) {
 
-      if (voxel_brick_get_vec3(brick, index) > density) {
-        out[0] = index[0];
-        out[1] = index[1];
-        out[2] = index[2];
-        return 1;
+      if (brick->voxels[brick_index] > density) {
+        return brick_index;
       }
 
       mask = _mm_and_ps(
@@ -142,8 +143,20 @@
       );
 
       maxt += _mm_and_ps(mask, deltat);
-      index += _mm_and_ps(mask, step);
+
+      vec3 is = _mm_and_ps(mask, step);
+      if (is[0]) {
+        brick_index += is[0] > 0 ? VOXEL_BRICK_IDX_X : -VOXEL_BRICK_IDX_X;
+      } else if (is[1]) {
+        brick_index += is[1] > 0 ? VOXEL_BRICK_IDX_Y : -VOXEL_BRICK_IDX_Y;
+      } else if (is[2]) {
+        brick_index += is[2] > 0 ? VOXEL_BRICK_IDX_Z : -VOXEL_BRICK_IDX_Z;
+      } else {
+        break;
+      }
+
+      index += is;
     }
-    return 0;
+    return -1;
   }
 #endif
