@@ -50,6 +50,7 @@
   static int bounding_tree_ray(bounding_tree_node node, ray3 *r, int accumulator[3]) {
     vec3 isect;
     int closest = -1;
+    float dist = FLT_MAX;
 
     if (!ray_isect_simd(r, node->bounds, &isect)) {
       return closest;
@@ -62,8 +63,6 @@
     }
 
     if (node->brick != NULL) {
-      float dist = FLT_MAX;
-
       for (int v=0; v<8; v++) {
         vec3 corner = node->center + bounding_tree_corner_from_octant(node, v);
         aabb bounds;
@@ -86,10 +85,16 @@
         if (node->children[i] != NULL) {
           int ret = bounding_tree_ray(node->children[i], r, accumulator);
           if (ret > -1) {
-            return ret;
+            float ldist = vec3_distance(node->children[i]->center, r->origin);
+            if (ldist < dist) {
+              closest = ret;
+              dist = ldist;
+            }
           }
         }
       }
+
+      return closest;
     }
 
     return closest;
