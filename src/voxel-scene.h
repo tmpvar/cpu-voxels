@@ -49,9 +49,10 @@
 
   static int bounding_tree_ray(bounding_tree_node node, ray3 *r, int accumulator[3]) {
     vec3 isect;
+    int closest = -1;
 
     if (!ray_isect_simd(r, node->bounds, &isect)) {
-      return -1;
+      return closest;
     }
 
     if (accumulator[0] < 255) {
@@ -61,7 +62,24 @@
     }
 
     if (node->brick != NULL) {
-      return voxel_brick_traverse(node->brick, isect, r->dir, 0);
+      float dist = FLT_MAX;
+
+      for (int v=0; v<8; v++) {
+        vec3 corner = node->center + bounding_tree_corner_from_octant(node, v);
+        aabb bounds;
+        bounds[0] = _mm_min_ps(corner, node->center);
+        bounds[1] = _mm_max_ps(corner, node->center);
+
+        if (node->brick->voxels[v] > 0.0f && ray_isect_simd(r, bounds, &isect)) {
+          float ldist = vec3_distance(isect, r->origin);
+          if (ldist < dist) {
+            closest = v;
+            dist = ldist;
+          }
+        }
+      }
+
+      return closest;
     } else {
       // recurse into the structure on the appropriate node
       for (int i=0; i<8; i++) {
@@ -74,7 +92,7 @@
       }
     }
 
-    return -1;
+    return closest;
   }
 
   typedef struct voxel_scene_t {
