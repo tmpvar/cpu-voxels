@@ -41,7 +41,10 @@ TEST(scene, full_1_level_octree) {
     voxel_brick_fill_constant(brick, 0.0f);
     voxel_scene_add_brick(scene, brick);
 
+    // ensure the brick is in the right octant
     EXPECT_EQ(scene->root->children[i]->brick, brick);
+
+    // ensure the brick bounds and node bounds match
     EXPECT_EQ(
       scene->root->children[i]->bounds[0][0],
       scene->root->children[i]->brick->bounds[0][0]
@@ -106,4 +109,28 @@ TEST(scene, full_2_level_octree) {
   EXPECT_EQ(scene->root->bounds[1][0],  VOXEL_BRICK_SIZE*2.0f);
   EXPECT_EQ(scene->root->bounds[1][1],  VOXEL_BRICK_SIZE*2.0f);
   EXPECT_EQ(scene->root->bounds[1][2],  VOXEL_BRICK_SIZE*2.0f);
+}
+
+TEST(scene, three_level_brick_position) {
+  voxel_scene scene = voxel_scene_create();
+  bounding_tree_node n = scene->root;
+  for (int i=0; i<3; i++) {
+    voxel_brick brick = voxel_brick_create();
+    voxel_brick_position(brick, vec3_create(
+      scene->root->bounds[1][0] + VOXEL_BRICK_HALF_SIZE,// + (scene->root->level) * VOXEL_BRICK_SIZE,
+      VOXEL_BRICK_HALF_SIZE,
+      VOXEL_BRICK_HALF_SIZE
+    ));
+    voxel_brick_fill_constant(brick, 0.0f);
+    n = voxel_scene_add_brick(scene, brick);
+  }
+
+
+
+  EXPECT_EQ(scene->root->bounds[0][0], 0.0f);
+  EXPECT_EQ(scene->root->bounds[0][1], 0.0f);
+  EXPECT_EQ(scene->root->bounds[0][2], 0.0f);
+  EXPECT_EQ(scene->root->bounds[1][0], VOXEL_BRICK_SIZE * 4.0f);
+  EXPECT_EQ(scene->root->bounds[1][1], VOXEL_BRICK_SIZE * 4.0f);
+  EXPECT_EQ(scene->root->bounds[1][2], VOXEL_BRICK_SIZE * 4.0f);
 }

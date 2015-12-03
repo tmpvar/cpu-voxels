@@ -300,10 +300,10 @@ int main(void)
   glfwSetCursorPosCallback(window, mouse_move_callback);
   glfwSetKeyCallback(window, key_callback);
 
-
-  unsigned int scene_radius = 1000;//, scene_height=50;50000;
-  voxel_brick bricks[scene_radius * scene_radius];
   voxel_scene scene = voxel_scene_create();
+
+  unsigned int scene_radius = 1;
+  voxel_brick bricks[scene_radius * scene_radius];
 
   for (int x=0; x<scene_radius; x++) {
     for (int y=0; y<scene_radius; y++) {
@@ -319,24 +319,9 @@ int main(void)
     }
   }
 
- // for (unsigned int i=0; i<brick_count; i++) {
- //   bricks[i] = voxel_brick_create();
- //   // voxel_brick_position(bricks[i], vec3f(VOXEL_BRICK_HALF_SIZE));
- //   voxel_brick_position(bricks[i], vec3_create(
- //     VOXEL_BRICK_HALF_SIZE + (float)i * VOXEL_BRICK_SIZE,
- //     VOXEL_BRICK_HALF_SIZE + (float)i * VOXEL_BRICK_SIZE,
- //     VOXEL_BRICK_HALF_SIZE
- //   ));
- //   voxel_brick_fill_constant(bricks[i], 1.0f);
- //   voxel_scene_add_brick(scene, bricks[i]);
- // }
+  voxel_scene_set(scene, 11, 10, 10, 1.0f);
 
-  // bricks[0] = voxel_brick_create();
-  // voxel_brick_position(bricks[0], vec3f(VOXEL_BRICK_HALF_SIZE));
-  // voxel_brick_fill_constant(bricks[0], 1.0f);
-  // voxel_scene_add_brick(scene, bricks[0]);
-
-  vec3 eye = vec3_create(0.0f, 0.0f, -scene->root->radius * 4);
+  vec3 eye = vec3_create(0.0f, 0.0f, -scene->root->radius * 8);
   vec3 center = vec3f(0.0f);
   vec3 up = vec3_create(0.0, 1.0, 0.0 );
 

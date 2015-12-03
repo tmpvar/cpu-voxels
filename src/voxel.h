@@ -9,9 +9,10 @@
 
   #define VOXEL_BRICK_WIDTH 2
   #define VOXEL_BRICK_HALF_WIDTH (1.0f)
-  #define VOXEL_SIZE 0.001f
-  #define VOXEL_BRICK_HALF_SIZE (0.001f)
-  #define VOXEL_BRICK_SIZE (0.002f)
+  #define VOXEL_SIZE 0.0001f
+  #define VOXEL_HALF_SIZE 0.00005f
+  #define VOXEL_BRICK_HALF_SIZE (0.0001f)
+  #define VOXEL_BRICK_SIZE (0.0002f)
 
   #define VOXEL_BRICK_IDX_X 1
   #define VOXEL_BRICK_IDX_Y 2
@@ -29,18 +30,13 @@
     aabb_packet bounds_packet;
   } *voxel_brick, voxel_brick_t;
 
-  static inline void voxel_brick_set(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z, float v) {
+  static inline void voxel_brick_set(voxel_brick brick, const unsigned int x, const unsigned int y, const unsigned int z, const float v) {
     brick->voxels[x*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + y*VOXEL_BRICK_WIDTH + z] = v;
   }
 
   voxel_brick voxel_brick_create() {
     voxel_brick out = (voxel_brick)malloc(sizeof(voxel_brick_t));
-    // begin memory allocation
-//    out->voxels = malloc(
     out->voxels = (float *)malloc(sizeof(float) * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH);
-
-
-    //    out->voxels = (float *)malloc(sizeof(float) * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH * VOXEL_BRICK_WIDTH);
     return out;
   }
 
@@ -64,6 +60,10 @@
 
   static inline float voxel_brick_get_vec3(voxel_brick brick, const vec3 p) {
     return brick->voxels[(int)p[0]*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + (int)p[1]*VOXEL_BRICK_WIDTH + (int)p[2]];
+  }
+
+  static inline void voxel_brick_set_vec3(voxel_brick brick, const vec3 p, const float v) {
+    brick->voxels[(int)p[0]*VOXEL_BRICK_WIDTH*VOXEL_BRICK_WIDTH + (int)p[1]*VOXEL_BRICK_WIDTH + (int)p[2]] = v;
   }
 
   static void voxel_brick_position(voxel_brick brick, const vec3 center) {

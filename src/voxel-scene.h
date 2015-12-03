@@ -47,6 +47,36 @@
     );
   }
 
+  static int bounding_tree_ray(bounding_tree_node node, ray3 *r, int accumulator[3]) {
+    vec3 isect;
+
+    if (!ray_isect_simd(r, node->bounds, &isect)) {
+      return -1;
+    }
+
+    if (accumulator[0] < 255) {
+      accumulator[0] += 10;
+      accumulator[1] += 10;
+      accumulator[2] += 10;
+    }
+
+    if (node->brick != NULL) {
+      return voxel_brick_traverse(node->brick, isect, r->dir, 0);
+    } else {
+      // recurse into the structure on the appropriate node
+      for (int i=0; i<8; i++) {
+        if (node->children[i] != NULL) {
+          int ret = bounding_tree_ray(node->children[i], r, accumulator);
+          if (ret > -1) {
+            return ret;
+          }
+        }
+      }
+    }
+
+    return -1;
+  }
+
   typedef struct voxel_scene_t {
     bounding_tree_node root;
   } *voxel_scene, voxel_scene_t;
@@ -59,15 +89,15 @@
     return scene;
   }
 
-  void voxel_scene_expand_over_brick(const voxel_scene scene, const voxel_brick brick) {
+  void voxel_scene_expand_over_position(const voxel_scene scene, const vec3 pos) {
     int octant = -1;
 
     // if the incoming brick is out of bounds of the current octree,
     // then re-root as many times as necessary to bound the brick.
-    while (!aabb_contains(scene->root->bounds, brick->center)) {
+    while (!aabb_contains(scene->root->bounds, pos)) {
 
      // move the current root under the new root
-     octant = bounding_tree_octant_from_vec3(scene->root, brick->center);
+     octant = bounding_tree_octant_from_vec3(scene->root, pos);
 
      float root_radius = scene->root->radius * 2.0f;
      bounding_tree_node new_root = bounding_tree_create_node(
@@ -84,32 +114,36 @@
     }
   }
 
-  bounding_tree_node voxel_scene_add_brick(voxel_scene scene, voxel_brick brick) {
+  bounding_tree_node voxel_scene_node_for_position(const bounding_tree_node start, const vec3 pos) {
     int octant = -1;
-
-    voxel_scene_expand_over_brick(scene, brick);
-
-    // walk the tree and find the slot in which the brick should live
-    bounding_tree_node node = scene->root;
+    bounding_tree_node node = start;
 
     while (node->level) {
       // leaves are containers for bricks, utilize the previously computed octant
-      octant = bounding_tree_octant_from_vec3(node, brick->center);
+      octant = bounding_tree_octant_from_vec3(node, pos);
 
       if (node->children[octant] == NULL) {
-        float node_radius = node->radius * 0.5f;
-        vec3 center = node->center + bounding_tree_corner_from_octant(node, octant) * vec3f(0.5f);
         node->children[octant] = bounding_tree_create_node(
-          node_radius,
-          center
+          node->radius * 0.5f,
+          node->center + bounding_tree_corner_from_octant(node, octant) * vec3f(0.5f)
         );
         node->children[octant]->level = node->level - 1;
       }
       node = node->children[octant];
     }
 
+    return node;
+  }
+
+  bounding_tree_node voxel_scene_add_brick(voxel_scene scene, voxel_brick brick) {
+
+    // ensure the scene covers the new brick location
+    voxel_scene_expand_over_position(scene, brick->center);
+
+    // walk the tree and find the slot in which the brick should live
+    bounding_tree_node node = voxel_scene_node_for_position(scene->root, brick->center);
+
     // setup the leaf
-    octant = bounding_tree_octant_from_vec3(node, brick->center);
     node->brick = brick;
     node->bounds[0] = brick->bounds[0];
     node->bounds[1] = brick->bounds[1];
@@ -118,36 +152,33 @@
     return node;
   }
 
-  static int bounding_tree_ray(bounding_tree_node node, ray3 *r, int accumulator[3]) {
-    vec3 isect;
-
-    if (accumulator[0] < 255) {
-      accumulator[0] += 1;
-      accumulator[1] += 1;
-      accumulator[2] += 1;
-    }
-
-    if (ray_isect_simd(r, node->bounds, &isect)) {
-      if (node->brick != NULL) {
-        return voxel_brick_traverse(node->brick, isect, r->dir, 0);
-      } else {
-        // recurse into the structure on the appropriate node
-        for (int i=0; i<8; i++) {
-          if (node->children[i] != NULL) {
-            int ret = bounding_tree_ray(node->children[i], r, accumulator);
-            if (ret > -1) {
-              return ret;
-            }
-          }
-        }
-      }
-    }
-
-    return -1;
-  }
-
   int voxel_scene_ray(voxel_scene scene, ray3 *r, int accumulator[3]) {
     return bounding_tree_ray(scene->root, r, accumulator);
+  }
+
+  void voxel_scene_set(const voxel_scene scene, const int x, const int y, const int z, const float v) {
+    vec3 brick_half = vec3f(VOXEL_BRICK_HALF_SIZE);
+    vec3 brick_corner = _mm_floor_ps(vec3_create((float)x, (float)y, (float)z)) * vec3f(VOXEL_SIZE);
+    vec3 brick_pos = brick_corner + brick_half;
+
+    voxel_scene_expand_over_position(scene, brick_pos);
+
+    // walk the tree and find the slot in which the brick should live
+    bounding_tree_node node = voxel_scene_node_for_position(scene->root, brick_pos);
+
+    if (node->brick == NULL) {
+      node->brick = voxel_brick_create();
+      voxel_brick_fill_constant(node->brick, 0.0f);
+    }
+
+    voxel_brick_position(node->brick, brick_pos);
+    voxel_brick_set(
+      node->brick,
+      x % VOXEL_BRICK_WIDTH,
+      y % VOXEL_BRICK_WIDTH,
+      z % VOXEL_BRICK_WIDTH,
+      v
+    );
   }
 
 #endif
